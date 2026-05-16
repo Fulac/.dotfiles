@@ -145,7 +145,7 @@ vim.opt.number = true
 vim.opt.cursorline = true
 
 -- ステータス行を常に表示
-vim.opt.laststatus = 2
+vim.opt.laststatus = 3
 
 -- メッセージ表示欄を２行確保
 vim.opt.cmdheight = 2
@@ -163,7 +163,7 @@ vim.opt.helpheight = 999
 vim.opt.list = true
 
 -- 不可視文字の表示記号設定
-vim.opt.listchars = { tab='>-', extends='>', precedes='<' }
+vim.opt.listchars = "tab:>-,extends:>,precedes:<"
 
 -- モードの表示を消す
 vim.opt.showmode = false
