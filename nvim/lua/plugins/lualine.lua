@@ -1,12 +1,13 @@
 return {
   'nvim-lualine/lualine.nvim',
-  dependencies = {'nvim-tree/nvim-web-devicons'},
+  dependencies = { 'echasnovski/mini.icons' },
+  lazy = false,
   config = function()
     local config = {
       options = {
         icons_enabled = true,
-        theme = 'codedark',
-        globalstatus = ture,
+        theme = 'auto',
+        globalstatus = true,
         section_separators = { left = '', right = ''},
         component_separators = { left = '', right = ''},
         disabled_filetypes = {
@@ -15,7 +16,6 @@ return {
         },
         ignore_focus = {},
         always_divide_middle = true,
-        globalstatus = false,
         refresh = {
           statusline = 1000,
           tabline = 1000,
@@ -47,4 +47,3 @@ return {
     require('lualine').setup(config)
   end
 }
-
