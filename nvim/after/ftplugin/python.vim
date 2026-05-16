@@ -9,4 +9,3 @@ set shiftwidth=4
 
 " 連続した空白に対してタブキーやバックスペースでカーソルが動く幅
 set softtabstop=4
-

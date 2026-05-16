@@ -114,7 +114,15 @@ vim.opt.fileencoding = 'utf-8'
 vim.opt.fileencodings = { 'ucs-bom', 'utf-8', 'iso-2022', 'cp932', 'default', 'latin' }
 
 -- Ambiguous Width Charactersの設定
-vim.opt.ambiwidth = 'double'
+-- 表示が崩れる特定の文字（コードポイント）だけをピンポイントで「幅2」に強制上書きする
+vim.opt.ambiwidth = 'single'
+vim.fn.setcellwidths({
+  { 0x2026, 0x2026, 2 }, -- … (三点リーダー)
+  { 0x203b, 0x203b, 2 }, -- ※ (米印)
+  { 0x25a0, 0x25a0, 2 }, -- ■ (四角)
+  { 0x25b2, 0x25b2, 2 }, -- ▲ (三角)
+  { 0x2192, 0x2192, 2 }, -- → (右矢印)
+})
 
 -- Menuの言語設定
 vim.opt.langmenu = 'none'
@@ -248,12 +256,6 @@ vim.fn.setcellwidths( cellwidths )
 require( 'lazy_nvim' )
 
 ----------------------------------------------
--- load plugin settings
-----------------------------------------------
--- lazy.nvim
-require( 'plugin_setting' )
-
-----------------------------------------------
 -- os個別設定
 ----------------------------------------------
 -- shellコマンドの実行結果を取得する
@@ -279,4 +281,3 @@ elseif OSTYPE == 'Windows\n' then
   vim.g.python3_host_prog = 'C:/Users/fulac/Programs/Python/Python38/python'
 
 end
-

@@ -108,4 +108,3 @@ endfunction
 "---------------------------------------------
 " tex用conceal機能を無効化
 let g:tex_conceal = ''
-

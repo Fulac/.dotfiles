@@ -194,4 +194,3 @@ else
   # マニュアル (NerdFontが使えない環境で利用)
   source "${HOME}/.dotfiles/zsh/prompt.rc.zsh"
 fi
-

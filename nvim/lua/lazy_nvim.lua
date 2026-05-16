@@ -4,7 +4,7 @@
 --  lazy.nvim
 local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
 
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
   vim.fn.system({
     'git',
     'clone',
@@ -22,13 +22,16 @@ local plugins = {
 }
 
 local opts = {
-  default = {
+  defaults = {
     lazy = true
   },
+  ui = {
+    border = "rounded", -- 外枠の線を丸角にする（"single" や "double" にも変更可能）
+  },
+  rocks = {
+    enabled = false,
+  },
   performance = {
-    cache = {
-      enabled = true,
-    },
     rtp = {
       disabled_plugins = {
         'netrw',
@@ -55,4 +58,3 @@ local opts = {
 
 -- Any lua file in ~/.config/nvim/lua/pulgins/*.lua will be automatically merged
 require( 'lazy' ).setup( plugins, opts )
-

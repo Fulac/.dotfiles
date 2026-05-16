@@ -9,4 +9,3 @@ au FileType * setlocal formatoptions-=ro
 "---------------------------------------------
 " FileType plaintex -> tex
 autocmd FileType plaintex setlocal filetype=tex
-

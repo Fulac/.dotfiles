@@ -12,4 +12,3 @@ set softtabstop=4
 
 " Cライクな文法を持つ言語に有効なインデント
 set cindent
-
