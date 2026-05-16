@@ -14,7 +14,7 @@ vim.keymap.set( 'n', '<Space>l', '$' )
 vim.keymap.set( 'n', '<Space>j', '%' )
 
 -- 単語補完を一覧の逆順にカーソルを動かして行う
-vim.keymap.set( 'i', '<C-f>', 'C-p>' )
+vim.keymap.set( 'i', '<C-f>', '<C-p>' )
 
 -- ウィンドウ移動(上、下、左、右、次)
 vim.keymap.set( 'n', '<C-k>', '<C-w>k' )
@@ -90,7 +90,7 @@ vim.opt.autoindent = true
 -- 動作環境との統合関連の設定
 ----------------------------------------------
 -- マウスの入力を受け付ける
-vim.opt.mouse = a
+vim.opt.mouse = 'a'
 
 ----------------------------------------------
 -- ビープの設定
@@ -145,7 +145,7 @@ vim.opt.number = true
 vim.opt.cursorline = true
 
 -- ステータス行を常に表示
-vim.opt.laststatus = 3
+vim.opt.laststatus = 2
 
 -- メッセージ表示欄を２行確保
 vim.opt.cmdheight = 2
@@ -163,13 +163,10 @@ vim.opt.helpheight = 999
 vim.opt.list = true
 
 -- 不可視文字の表示記号設定
-vim.opt.listchars = { tab='»-', extends='»', precedes='«' }
+vim.opt.listchars = { tab='>-', extends='>', precedes='<' }
 
 -- モードの表示を消す
 vim.opt.showmode = false
-
--- あいまい記号の幅設定
-vim.opt.ambiwidth = 'double'
 
 ----------------------------------------------
 -- カーソル移動関連の設定
