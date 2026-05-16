@@ -16,46 +16,44 @@ return {
       terminalColors = true,     -- Neovim内のターミナルバッファにもカラーを適用
 
       -- テーマのバリエーション選択 ("wave" | "dragon" | "lotus")
-      theme = "wave",            -- デフォルトは伝統的な和色の "wave"
-      
-      background = {             -- vim.o.background に応じた自動切り替え
-        dark = "wave",           -- より深い黒が好みなら "dragon" もおすすめ
-        light = "lotus"          -- 明るい背景用
-      },
+      theme = "wave",
+      background = { dark = "wave", light = "lotus" },
 
-      -- 各種プラグインとのハイライトの調和設定
+      -- カラー設定を独自設定へ上書き
       overrides = function(colors)
         local theme = colors.theme
         return {
-          -- ==========================================================================
-          -- Snacks.pickerの色設定
-          -- ==========================================================================
+          -- Snacks.pickerの背景透過設定
           SnacksPickerNormal        = { bg = "NONE" },
-          SnacksPickerBorder        = { fg = theme.ui.bg_m1, bg = "NONE" },
+          SnacksPickerBorder        = { fg = theme.ui.border, bg = "NONE" },
           SnacksPickerInputNormal   = { bg = "NONE" },
-          SnacksPickerInputBorder   = { fg = theme.ui.bg_m1, bg = "NONE" },
+          SnacksPickerInputBorder   = { fg = theme.ui.border, bg = "NONE" },
           SnacksPickerPreviewNormal = { bg = "NONE" },
-          SnacksPickerPreviewBorder = { fg = theme.ui.bg_m1, bg = "NONE" },
+          SnacksPickerPreviewBorder = { fg = theme.ui.border, bg = "NONE" },
 
-          -- Pmenu (blink.cmpなどの補完ポップアップ) の視認性向上
+          -- Pmenu (blink.cmpなどの補完UI) の視認性向上
           Pmenu = { fg = theme.ui.fg, bg = theme.ui.bg_p1 },
           PmenuSel = { fg = "NONE", bg = theme.ui.bg_p2 },
           PmenuSbar = { bg = theme.ui.bg_m1 },
           PmenuThumb = { bg = theme.ui.bg_p2 },
+
+          -- 共通フローティングウィンドウの背景 ＆ 枠線透過
+          NormalFloat = { bg = "NONE" },
+          FloatBorder = { fg = theme.ui.border, bg = "NONE" },
+
+          -- エディタ基本UIの透過設定
+          Normal       = { bg = "NONE" },
+          NonText      = { bg = "NONE" },
+          LineNr       = { fg = "#504945", bg = "NONE" },
+          Folded       = { bg = "NONE" },
+          EndOfBuffer  = { bg = "NONE" },
+          CursorLine   = { bg = "NONE" },
+          CursorLineNr = { fg = "#ffad5c", bg = "NONE" },
         }
       end,
     })
 
-    -- カラースキームを適用 & 独自カラー設定の適用
+    -- カラースキームを適用
     vim.cmd("colorscheme kanagawa")
-    vim.api.nvim_set_hl(0, 'Normal', { bg = 'NONE', ctermbg = 'none' })
-    vim.api.nvim_set_hl(0, 'NonText', { bg = 'NONE', ctermbg = 'none' })
-    vim.api.nvim_set_hl(0, 'LineNr', { fg = '#504945', bg = 'NONE', ctermbg = 'none' })
-    vim.api.nvim_set_hl(0, 'Folded', { bg = 'NONE', ctermbg = 'none' })
-    vim.api.nvim_set_hl(0, 'EndOfBuffer', { bg = 'NONE', ctermbg = 'none' })
-    vim.api.nvim_set_hl(0, 'CursorLine', { bg = 'none' })
-    vim.api.nvim_set_hl(0, 'CursorLineNr', { fg = '#ffad5c', bg = 'none' })
-    vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'NONE', ctermbg = 'none' })
-    vim.api.nvim_set_hl(0, 'FloatBorder', { fg = '#504945', bg = 'NONE', ctermbg = 'none' })
   end,
 }
