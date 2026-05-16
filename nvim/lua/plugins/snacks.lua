@@ -57,4 +57,20 @@ return {
     { "<leader>gl", function() Snacks.picker.git_log() end, desc = "Git Log" },
     { "<leader>gs", function() Snacks.picker.git_status() end, desc = "Git Status" },
   },
+
+  -----------------------------------------------------------------------------
+  -- プラグイン起動後の設定（色設定 等）
+  -----------------------------------------------------------------------------
+  config = function(_, opts)
+    require("snacks").setup(opts)
+
+    -- 背景透過 ＆ 枠線デザインの一括適用
+    local border_color = "#504945" 
+    vim.api.nvim_set_hl(0, 'SnacksPickerNormal',        { bg = 'NONE' })
+    vim.api.nvim_set_hl(0, 'SnacksPickerBorder',        { fg = border_color, bg = 'NONE' })
+    vim.api.nvim_set_hl(0, 'SnacksPickerInputNormal',   { bg = 'NONE' })
+    vim.api.nvim_set_hl(0, 'SnacksPickerInputBorder',   { fg = border_color, bg = 'NONE' })
+    vim.api.nvim_set_hl(0, 'SnacksPickerPreviewNormal', { bg = 'NONE' })
+    vim.api.nvim_set_hl(0, 'SnacksPickerPreviewBorder', { fg = border_color, bg = 'NONE' })
+  end,
 }

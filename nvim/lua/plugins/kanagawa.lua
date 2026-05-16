@@ -23,23 +23,16 @@ return {
       overrides = function(colors)
         local theme = colors.theme
         return {
-          -- Snacks.pickerの背景透過設定
-          SnacksPickerNormal        = { bg = "NONE" },
-          SnacksPickerBorder        = { fg = theme.ui.border, bg = "NONE" },
-          SnacksPickerInputNormal   = { bg = "NONE" },
-          SnacksPickerInputBorder   = { fg = theme.ui.border, bg = "NONE" },
-          SnacksPickerPreviewNormal = { bg = "NONE" },
-          SnacksPickerPreviewBorder = { fg = theme.ui.border, bg = "NONE" },
-
           -- Pmenu (blink.cmpなどの補完UI) の視認性向上
-          Pmenu = { fg = theme.ui.fg, bg = theme.ui.bg_p1 },
+          Pmenu = { fg = theme.ui.fg, bg = "NONE" },
           PmenuSel = { fg = "NONE", bg = theme.ui.bg_p2 },
           PmenuSbar = { bg = theme.ui.bg_m1 },
           PmenuThumb = { bg = theme.ui.bg_p2 },
 
           -- 共通フローティングウィンドウの背景 ＆ 枠線透過
           NormalFloat = { bg = "NONE" },
-          FloatBorder = { fg = theme.ui.border, bg = "NONE" },
+          FloatBorder = { fg = "#504945", bg = "NONE" },
+          FloatTitle = { fg = "#ffad5c", bg = "NONE", bold = true },
 
           -- エディタ基本UIの透過設定
           Normal       = { bg = "NONE" },
