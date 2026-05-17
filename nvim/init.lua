@@ -255,26 +255,18 @@ require( 'lazy_nvim' )
 ----------------------------------------------
 -- os個別設定
 ----------------------------------------------
--- shellコマンドの実行結果を取得する
-function exec_os_cmd(cmd)
-  local f = io.popen(cmd, 'r')
-  local s = f:read('a')
-  f:close()
-  return s
-end
-
 if vim.fn.has( 'win64' ) == 1 then
-  OSTYPE = 'Windows\n'
+  OSTYPE = 'Windows'
 else
-  OSTYPE = exec_os_cmd( 'uname' )
+  OSTYPE = 'Linux'
 end
 
-if OSTYPE == 'Linux\n' then
+if OSTYPE == 'Linux' then
   -- python3のパス設定
-  vim.g.python3_host_prog = exec_os_cmd('which python3')
+  vim.g.python3_host_prog = vim.fn.expand('~/.local/share/nvim/venv/bin/python')
 
 elseif OSTYPE == 'Windows\n' then
   -- python3のパス設定
-  vim.g.python3_host_prog = 'C:/Users/fulac/Programs/Python/Python38/python'
+  vim.g.python3_host_prog = vim.fn.expand('C:/Users/fulac/Programs/Python/Python38/python')
 
 end
