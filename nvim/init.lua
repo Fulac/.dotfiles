@@ -168,6 +168,9 @@ vim.opt.listchars = "tab:>-,extends:>,precedes:<"
 -- モードの表示を消す
 vim.opt.showmode = false
 
+-- 縦分割を右側に開く
+vim.opt.splitright = true
+
 ----------------------------------------------
 -- カーソル移動関連の設定
 ----------------------------------------------
