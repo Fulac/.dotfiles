@@ -1,12 +1,13 @@
 return {
   "nvim-treesitter/nvim-treesitter",
-  branch = "master",
+  branch = "main",
   build = ":TSUpdate",
   -- event 指定で、Neovimが完全に起動してパスが通った後に読み込ませる
   event = { "BufReadPost", "BufNewFile" },
   main = "nvim-treesitter.configs",
-  opts = {
-    ensure_installed = {
+  config = function()
+    -- 言語パーサーのインストール
+    require("nvim-treesitter").install({
       -- 基本言語 & 共通フォーマット
       "c", "cpp", "lua", "vim", "vimdoc", "python", "javascript", "html", "json", "yaml", "query",
       -- ドキュメント & テキストノート
@@ -22,11 +23,22 @@ return {
       "diff",
       "gitcommit",
       "gitignore",
-    },
-    -- 非同期で安全にインストールを回すため
-    sync_install = false,
+    })
 
-    highlight = { enable = true },
-    indent = { enable = true },
-  },
+    -- シンタックスハイライトの自動有効化
+    vim.api.nvim_create_autocmd("FileType", {
+      group = vim.api.nvim_create_augroup("TreesitterHighlight", { clear = true }),
+      callback = function()
+        pcall(vim.treesitter.start)
+      end,
+    })
+
+    -- インデントの自動有効化
+    vim.api.nvim_create_autocmd("FileType", {
+      group = vim.api.nvim_create_augroup("TreesitterIndent", { clear = true }),
+      callback = function()
+        vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+      end,
+    })
+  end,
 }
