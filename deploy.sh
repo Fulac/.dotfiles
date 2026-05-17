@@ -7,17 +7,19 @@ fi
 
 args=${1:-client}
 
-### Variables
+### Variables ###
 DOTFILES_PATH=$(cd $(dirname $0); pwd)
 DOTFILES_ZSH_PATH="${DOTFILES_PATH}/zsh"
 DOTFILES_FISH_PATH="${DOTFILES_PATH}/fish"
 DOTFILES_VIM_PATH="${DOTFILES_PATH}/vim"
 DOTFILES_NVIM_PATH="${DOTFILES_PATH}/nvim"
+DOTFILES_GHOSTTY_PATH="${DOTFILES_PATH}/ghostty"
 FISH_CONFIG_PATH="${HOME}/.config/fish"
 VIM_CONFIG_PATH="${HOME}/.vim"
 NVIM_CONFIG_PATH="${HOME}/.config/nvim"
+GHOSTTY_CONFIG_PATH="${HOME}/.config/ghostty"
 
-### zsh
+### zsh ###
 ln -sf ${DOTFILES_ZSH_PATH}/zshrc ${HOME}/.zshrc
 echo "make symbolic link '.zshrc' at ${HOME}"
 
@@ -27,7 +29,7 @@ fi
 ln -sf ${DOTFILES_ZSH_PATH}/sheldon ${HOME}/.config/sheldon
 echo "make symbolic link '.config/sheldon' at ${DOTFILES_ZSH_PATH}/sheldon"
 
-### fish
+### fish ###
 #if [ -d ${FISH_CONFIG_PATH} ]; then
 #  # config.fish
 #  if [ -e ${FISH_CONFIG_PATH}/config.fish ]; then
@@ -56,7 +58,7 @@ echo "make symbolic link '.config/sheldon' at ${DOTFILES_ZSH_PATH}/sheldon"
 #  fi
 #fi
 
-### Neovim
+### Neovim ###
 if [ -L ${NVIM_CONFIG_PATH} ]; then
   unlink ${NVIM_CONFIG_PATH}
 elif [ -d ${NVIM_CONFIG_PATH} ]; then
@@ -65,7 +67,7 @@ fi
 ln -sf ${DOTFILES_NVIM_PATH} ${NVIM_CONFIG_PATH}
 echo "make symbolic link 'nvim' at ${HOME}/.config"
 
-### Vim
+### Vim ###
 if [ -L ${VIM_CONFIG_PATH} ]; then
   unlink ${VIM_CONFIG_PATH}
 elif [ -d ${VIM_CONFIG_PATH} ]; then
@@ -74,3 +76,11 @@ fi
 ln -sf ${DOTFILES_VIM_PATH} ${VIM_CONFIG_PATH}
 echo "make symbolic link 'vim' at ${HOME}"
 
+### Ghostty ###
+if [[ -L ${GHOSTTY_CONFIG_PATH}/config.ghostty || -f ${GHOSTTY_CONFIG_PATH}/config.ghostty ]]; then
+  unlink ${GHOSTTY_CONFIG_PATH}/config.ghostty
+else
+  mkdir -p ${GHOSTTY_CONFIG_PATH}
+fi
+ln -sf ${DOTFILES_GHOSTTY_PATH}/config.ghostty ${GHOSTTY_CONFIG_PATH}/config.ghostty
+echo "make symbolic link 'ghostty' at ${HOME}/.config/ghostty"

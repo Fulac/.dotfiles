@@ -1,0 +1,76 @@
+### Ghostty Configuration ###
+
+# ==========================================
+# フォント設定
+# ==========================================
+font-family = Bizin Gothic NF
+font-size = 12
+font-style = Regular
+
+# ==========================================
+# カラーパレット (0〜15)
+# ==========================================
+# --- 基本色 ---
+foreground = #c3d7d1
+background = #0a0c11
+
+# --- 標準色 (Normal Colors) ---
+palette = 0=#282c34
+palette = 1=#ed254e
+palette = 2=#71f79f
+palette = 3=#f9dc5c
+palette = 4=#5c7aff
+palette = 5=#dc9fea
+palette = 6=#00c1e4
+palette = 7=#dcdfe4
+
+# --- 明るい色 (Bright Colors) ---
+palette = 8=#282c34
+palette = 9=#ed254e
+palette = 10=#71f79f
+palette = 11=#f9dc5c
+palette = 12=#5c7aff
+palette = 13=#dc9fea
+palette = 14=#00c1e4
+palette = 15=#dcdfe4
+
+# ==========================================
+# 外観・UI設定
+# ==========================================
+# 行間設定（0%-100%）
+adjust-cell-height = 0%
+
+# 背景の透過度（0.0: 完全透明 - 1.0: 不透明）
+background-opacity = 0.9
+
+# ウィンドウの初期サイズ設定
+# 横幅（文字数 / カラム数）を指定
+window-width = 180
+# 高さ（行数）を指定
+window-height = 65
+
+# ウィンドウの余白
+window-padding-x = 3
+window-padding-y = 3
+
+# カーソル形状（block）、点滅有効
+cursor-style = block
+cursor-style-blink = false
+
+# ==========================================
+# その他
+# ==========================================
+# タブやウィンドウを閉じるときの確認ダイアログをオフにする
+confirm-close-surface = false
+
+# 過去の出力を遡れる行数
+scrollback-limit = 10000
+
+# 選択しただけで自動的にクリップボードにコピーする
+copy-on-select = clipboard
+# クリップボードの読み書きを許可
+clipboard-read = allow
+clipboard-write = allow
+
+# タイピングを開始した瞬間にマウスカーソルを非表示にする
+mouse-hide-while-typing = true
