@@ -29,6 +29,7 @@ return {
     config = function()
       local mason_lspconfig = require("mason-lspconfig")
 
+      -- グローバルな LSP キーマップ設定 (LspAttach オートコマンド)
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("UserLspConfig", {}),
         callback = function(ev)
@@ -59,29 +60,67 @@ return {
         float = { border = "rounded" },
       })
 
-      -- Lua専用設定 (lua_ls)
-      vim.lsp.config("lua_ls", {
+      -----------------------------------------------------------------------------
+      -- 各言語サーバー設定
+      -----------------------------------------------------------------------------
+
+      -- Lua用設定 (lua_ls)
+      vim.lsp.config( "lua_ls", {
         capabilities = capabilities,
         settings = {
           Lua = {
             diagnostics = {
               globals = { "vim" }, -- "vim" 変数への未定義警告を完全にシャットアウト
             },
-            -- バックグラウンドでのテレメトリを無効化
+            telemetry = { enable = false }, -- バックグラウンドのテレメトリを無効化
+          },
+        },
+      })
+
+      -- C / C++ 用設定 (clangd)
+      vim.lsp.config( "clangd", { capabilities = capabilities })
+
+      -- Python用設定 (pyright)
+      vim.lsp.config( "pyright", { capabilities = capabilities })
+      vim.lsp.config( "ruff", { capabilities = capabilities })
+
+      -- YAML用設定 (yamlls)
+      vim.lsp.config( "yamlls", {
+        capabilities = capabilities,
+        settings = {
+          yaml = {
+            telemetry = { enable = false }, -- バックグラウンドのテレメトリを無効化
+            validate = true, -- ネットワーク機器のConfigやPlaybookで不意なスキーマエラーを出さない
+          },
+        },
+      })
+
+      -- JSON用設定 (jsonls)
+      vim.lsp.config( "jsonls", {
+        capabilities = capabilities,
+        settings = {
+          json = {
             telemetry = { enable = false },
           },
         },
       })
 
-      -- 💡（参考）将来もし Python (pyright) などを追加したくなった場合は、
-      -- 以下の数行をここにポンと追記していくだけで、キーマップも含めて全自動で有効化されます！
-      -- if vim.lsp.config["pyright"] then
-      --   vim.lsp.config["pyright"]:add({ capabilities = capabilities })
-      -- end
+      -- Markdown用設定 (marksman)
+      vim.lsp.config( "marksman", { capabilities = capabilities })
 
+      -----------------------------------------------------------------------------
       -- mason-lspconfig の初期設定（自動インストール登録）
+      -----------------------------------------------------------------------------
       mason_lspconfig.setup({
-        ensure_installed = { "lua_ls" },
+        ensure_installed = {
+          "lua_ls",
+          "clangd",
+          "pyright",
+          "ruff",
+          "yamlls",
+          "jsonls",
+          "marksman"
+        },
       })
 
     end,

@@ -1,5 +1,5 @@
 return {
-  'saghen/blink.cmp', 
+  'saghen/blink.cmp',
   version = "*",
   event = { "InsertEnter", "CmdLineEnter" },
   ---@module 'blink.cmp'
@@ -17,7 +17,7 @@ return {
       ['<Tab>'] = {
         function(cmp)
           if cmp.snippet_active() then return cmp.accept()
-          else 
+          else
             local list = require('blink.cmp.completion.list')
             if #list.items == 1 then
               return cmp.select_and_accept()
@@ -32,7 +32,7 @@ return {
       ['<S-Tab>'] = {
         function(cmp)
           if cmp.snippet_active() then return cmp.accept()
-          else 
+          else
             local list = require('blink.cmp.completion.list')
             if #list.items == 1 then
               return cmp.select_and_accept()

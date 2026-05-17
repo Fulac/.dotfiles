@@ -6,7 +6,7 @@ return {
   event = { "BufReadPost", "BufNewFile" },
   main = "nvim-treesitter.configs",
   opts = {
-    ensure_installed = { 
+    ensure_installed = {
       -- 基本言語 & 共通フォーマット
       "c", "cpp", "lua", "vim", "vimdoc", "python", "javascript", "html", "json", "yaml", "query",
       -- ドキュメント & テキストノート
@@ -25,7 +25,7 @@ return {
     },
     -- 非同期で安全にインストールを回すため
     sync_install = false,
-    
+
     highlight = { enable = true },
     indent = { enable = true },
   },

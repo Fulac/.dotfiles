@@ -8,7 +8,7 @@ return {
     lazy = false, -- 他のプラグインが起動する前に確実に読み込ませる
     config = function()
       require("mini.icons").setup()
-      
+
       -- 従来の nvim-web-devicons を要求するプラグイン向けに互換レイヤー（モック）を張る
       require("mini.icons").mock_nvim_web_devicons()
     end,

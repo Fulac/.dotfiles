@@ -37,22 +37,22 @@ return {
     -- プロジェクト内のファイル検索
     { "<leader><space>", function() Snacks.picker.files() end, desc = "Find Files (Project)" },
     { "<leader>ff", function() Snacks.picker.files() end, desc = "Find Files" },
-    
+
     -- プロジェクト内を文字列検索
     { "<leader>fg", function() Snacks.picker.grep() end, desc = "Grep Search" },
-    
+
     -- 開いているバッファ一覧
     { "<leader>fb", function() Snacks.picker.buffers() end, desc = "Buffers" },
-    
+
     -- 最近開いたファイル履歴
     { "<leader>fr", function() Snacks.picker.recent() end, desc = "Recent Files" },
-    
+
     -- Neovimのヘルプタグ検索
     { "<leader>fh", function() Snacks.picker.help() end, desc = "Help Pages" },
-    
+
     -- 現在のバッファ内をファジー検索
     { "<leader>f/", function() Snacks.picker.lines() end, desc = "Buffer Lines" },
-    
+
     -- Gitのコミット履歴、ステータスの検索
     { "<leader>gl", function() Snacks.picker.git_log() end, desc = "Git Log" },
     { "<leader>gs", function() Snacks.picker.git_status() end, desc = "Git Status" },
@@ -65,7 +65,7 @@ return {
     require("snacks").setup(opts)
 
     -- 背景透過 ＆ 枠線デザインの一括適用
-    local border_color = "#504945" 
+    local border_color = "#504945"
     vim.api.nvim_set_hl(0, 'SnacksPickerNormal',        { bg = 'NONE' })
     vim.api.nvim_set_hl(0, 'SnacksPickerBorder',        { fg = border_color, bg = 'NONE' })
     vim.api.nvim_set_hl(0, 'SnacksPickerInputNormal',   { bg = 'NONE' })
