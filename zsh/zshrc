@@ -39,7 +39,7 @@ alias -g @g='| grep'
 alias -g @f='| find'
 alias -g @l='| less'
 alias clab="sudo containerlab"
-alias nvpip="uv pip --python ${HOME}/.local/share/nvim/venv/bin/python"
+alias nvpip="UV_PYTHON=${HOME}/.local/share/nvim/venv/bin/python uv pip"
 
 # --------------------------------------------
 # PATH設定
