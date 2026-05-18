@@ -23,6 +23,9 @@ return {
       markdown = { "prettier" },
       c = { "clang-format" },
       cpp = { "clang-format" },
+      sh = { "shfmt" },
+      bash = { "shfmt" },
+      zsh = { "shfmt" },
     },
     -- 以下に、フォーマッタの挙動変更設定を記載
     formatters = {
@@ -36,6 +39,10 @@ return {
           -- デフォルトと同じ設定（タブ幅などを変えたければ以下を編集する）
           "--style={BasedOnStyle: LLVM, IndentWidth: 2, UseTab: Never}",
         },
+      },
+      ["shfmt"] = {
+        -- インデントを半角スペースに、幅を2マスに固定
+        prepend_args = { "-i", "2" },
       },
     },
     format_on_save = {

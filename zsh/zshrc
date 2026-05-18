@@ -23,7 +23,7 @@ setopt magic_equal_subst
 setopt no_flow_control
 
 # cdの後にlsを実行
-chpwd() { ls --color=auto }
+chpwd() { ls --color=auto; }
 
 # --------------------------------------------
 # Aliases
@@ -47,7 +47,7 @@ alias nvpip="UV_PYTHON=${HOME}/.local/share/nvim/venv/bin/python uv pip"
 export XDG_CONFIG_HOME="${HOME}/.config"
 
 # Cargo
-if type cargo > /dev/null 2>&1; then
+if type cargo >/dev/null 2>&1; then
   export PATH="${HOME}/.cargo/bin:${PATH}"
 fi
 
@@ -115,7 +115,8 @@ zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
 # Complement
 # --------------------------------------------
 # 補完機能を有効にする
-autoload -U compinit; compinit
+autoload -U compinit
+compinit
 
 # 補完候補を一覧で表示する(d)
 setopt auto_list
@@ -160,17 +161,17 @@ zstyle ':completion:*' ignore-parents parent pwd
 setopt auto_pushd
 
 # kubectlの補完設定
-if type kubectl > /dev/null 2>&1; then
+if type kubectl >/dev/null 2>&1; then
   source <(kubectl completion zsh)
 fi
 
 # containerlabの補完設定
-if type containerlab > /dev/null 2>&1; then
+if type containerlab >/dev/null 2>&1; then
   source <(containerlab completion zsh)
 fi
 
 # uvの補完設定
-if type uv > /dev/null 2>&1; then
+if type uv >/dev/null 2>&1; then
   eval "$(uv generate-shell-completion zsh)"
   eval "$(uvx --generate-shell-completion zsh)"
 fi
@@ -188,7 +189,7 @@ unsetopt caseglob
 # Prompt
 # --------------------------------------------
 # Starship
-if type starship > /dev/null 2>&1; then
+if type starship >/dev/null 2>&1; then
   export STARSHIP_CONFIG="${HOME}/.dotfiles/zsh/starship.toml"
   eval "$(starship init zsh)"
 else
