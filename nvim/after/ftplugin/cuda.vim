@@ -2,13 +2,13 @@
 " タブ/インデントの設定
 "---------------------------------------------
 " 画面入力でタブ文字が占める幅
-set tabstop=4
+set tabstop=2
 
 " 自動インデントでずれる幅
-set shiftwidth=4
+set shiftwidth=2
 
 " 連続した空白に対してタブキーやバックスペースでカーソルが動く幅
-set softtabstop=4
+set softtabstop=2
 
 " Cライクな文法を持つ言語に有効なインデント
 set cindent
