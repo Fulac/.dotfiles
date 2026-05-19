@@ -96,5 +96,5 @@ if [[ -L ${ALACRITTY_CONFIG_PATH}/alacritty.toml || -f ${ALACRITTY_CONFIG_PATH}/
 else
   mkdir -p ${ALACRITTY_CONFIG_PATH}
 fi
-ln -sf ${DOTFILES_ALACRITTY_PATH}/alacritty.toml ${DOTFILES_ALACRITTY_PATH}/alacritty.toml
+ln -sf ${DOTFILES_ALACRITTY_PATH}/alacritty.toml ${ALACRITTY_CONFIG_PATH}/alacritty.toml
 echo "make symbolic link 'ghostty' at ${HOME}/.config/alacritty/alacritty.toml"
