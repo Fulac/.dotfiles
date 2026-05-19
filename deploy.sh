@@ -32,6 +32,10 @@ VIM_CONFIG_PATH="${HOME}/.vim"
 NVIM_CONFIG_PATH="${CONFIG_DIR}/nvim"
 ALACRITTY_CONFIG_PATH="${CONFIG_DIR}/alacritty"
 
+# Neovim用 Python仮想環境のパス
+NVIM_VENV_PATH="${HOME}/.local/share/nvim/venv"
+NVIM_VENV_PYTHON="${NVIM_VENV_PATH}/bin/python"
+
 ### Helper Functions ###
 
 # シンボリックリンクを安全に作成する共通関数
@@ -56,18 +60,46 @@ deploy_link() {
   echo "Created symbolic link for [$name] at: $dst"
 }
 
+# Neovim用のPython仮想環境をuvで構築する関数
+setup_nvim_python_env() {
+  echo "Checking dependencies for Neovim Python environment..."
+
+  # nvim, python, uv のすべてがインストールされているか確認
+  if command -v nvim >/dev/null 2>&1 &&
+    command -v python >/dev/null 2>&1 &&
+    command -v uv >/dev/null 2>&1; then
+
+    # すでに仮想環境があり、pynvimが導入済みかチェック
+    if [ -x "$NVIM_VENV_PYTHON" ] && "$NVIM_VENV_PYTHON" -c "import pynvim" >/dev/null 2>&1; then
+      echo "Neovim Python venv and pynvim are already configured. Skipping setup."
+    else
+      echo "Setting up Neovim Python environment using uv..."
+      mkdir -p "$(dirname "$NVIM_VENV_PATH")"
+
+      # 既存の不完全なディレクトリがあれば削除してクリーンインストール
+      [ -d "$NVIM_VENV_PATH" ] && rm -rf "$NVIM_VENV_PATH"
+
+      uv venv "$NVIM_VENV_PATH"
+      uv pip install pynvim --python "$NVIM_VENV_PYTHON"
+      echo "Neovim Python environment configured successfully at: $NVIM_VENV_PATH"
+    fi
+  else
+    echo "Skipping Neovim Python env setup: nvim, python, or uv is missing."
+  fi
+}
+
 ### Main Deployment Flow ###
 
 echo "Starting deployment in [$ARGS] mode..."
 
-# 1. zsh (client / server 両方で必ず実行)
+# zsh (client / server 両方で必ず実行)
 deploy_link "${DOTFILES_ZSH_PATH}/zshrc" "${HOME}/.zshrc" "zshrc"
 deploy_link "${DOTFILES_ZSH_PATH}/sheldon" "${CONFIG_DIR}/sheldon" "sheldon"
 
-# 2. Vim (client / server 両方で必ず実行)
+# Vim (client / server 両方で必ず実行)
 deploy_link "${DOTFILES_VIM_PATH}" "${VIM_CONFIG_PATH}" "Vim"
 
-# 3. Neovim (clientの場合は必須、serverの場合はインストール済みの場合のみ)
+# Neovim (clientの場合は必須、serverの場合はインストール済みの場合のみ)
 if [ "$ARGS" = "client" ]; then
   deploy_link "${DOTFILES_NVIM_PATH}" "${NVIM_CONFIG_PATH}" "Neovim"
 elif [ "$ARGS" = "server" ]; then
@@ -75,11 +107,17 @@ elif [ "$ARGS" = "server" ]; then
   if command -v nvim >/dev/null 2>&1; then
     deploy_link "${DOTFILES_NVIM_PATH}" "${NVIM_CONFIG_PATH}" "Neovim (Server)"
   else
-    echo "ℹ️  Neovim is not installed. Skipping Neovim configuration."
+    echo "Neovim is not installed. Skipping Neovim configuration."
   fi
 fi
 
-# 4. Alacritty (client の場合のみ実行)
+# Neovim用 Python 仮想環境の構築処理
+# clientモード、またはserverモードで既にnvimが導入されている場合に評価
+if [ "$ARGS" = "client" ] || [ "$IS_NVIM_INSTALLED" = true ]; then
+  setup_nvim_python_env
+fi
+
+# Alacritty (client の場合のみ実行)
 if [ "$ARGS" = "client" ]; then
   deploy_link "${DOTFILES_ALACRITTY_PATH}/alacritty.toml" "${ALACRITTY_CONFIG_PATH}/alacritty.toml" "Alacritty"
 fi
