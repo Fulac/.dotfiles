@@ -1,0 +1,195 @@
+### Alacritty Configuration ###
+
+# ==========================================
+# 全般・システム設定
+# ==========================================
+[general]
+live_config_reload = true   # 設定ファイルの変更をリアルタイムに反映
+working_directory = "None"  # 新規ウィンドウの初期ディレクトリ (Noneはカレントを引き継ぐ)
+
+[env]
+TERM = "xterm-256color"
+WINIT_X11_SCALE_FACTOR = "1"
+
+# ==========================================
+# フォント設定（Ghosttyの指定を優先）
+# ==========================================
+[font]
+size = 11.0
+
+[font.normal]
+family = "Bizin Gothic NF"  # font-family = Bizin Gothic NF
+style = "Regular"           # font-style = Regular
+
+[font.bold]
+family = "Bizin Gothic NF"
+style = "Bold"
+
+[font.italic]
+family = "Bizin Gothic NF"
+style = "Italic"
+
+[font.bold_italic]
+family = "Bizin Gothic NF"
+style = "Bold Italic"
+
+# ==========================================
+# カラーパレット
+# ==========================================
+[colors]
+draw_bold_text_with_bright_colors = true
+
+[colors.primary]
+background = "#0a0c11"      # background = #0a0c11
+foreground = "#c3d7d1"      # foreground = #c3d7d1
+
+[colors.normal]
+black   = "#282c34"         # palette = 0
+red     = "#ed254e"         # palette = 1
+green   = "#71f79f"         # palette = 2
+yellow  = "#f9dc5c"         # palette = 3
+blue    = "#5c7aff"         # palette = 4
+magenta = "#dc9fea"         # palette = 5
+cyan    = "#00c1e4"         # palette = 6
+white   = "#dcdfe4"         # palette = 7
+
+[colors.bright]
+black   = "#282c34"         # palette = 8
+red     = "#ed254e"         # palette = 9
+green   = "#71f79f"         # palette = 10
+yellow  = "#f9dc5c"         # palette = 11
+blue    = "#5c7aff"         # palette = 12
+magenta = "#dc9fea"         # palette = 13
+cyan    = "#00c1e4"         # palette = 14
+white   = "#dcdfe4"         # palette = 15
+
+# ==========================================
+# ウィンドウ・外観設定
+# ==========================================
+[window]
+opacity = 0.9               # background-opacity = 0.9 (背景の透過度)
+dynamic_padding = true      # ウィンドウサイズに合わせてパディングを自動調整
+decorations = "full"        # ウィンドウの飾り枠を表示
+title = "Alacritty"
+decorations_theme_variant = "Dark"
+
+[window.dimensions]
+columns = 180               # window-width = 180 (起動時の横幅/文字数)
+lines = 65                  # window-height = 65 (起動時の縦幅/行数)
+
+[window.padding]
+x = 0                       # 画面左右の余白
+y = 0                       # 画面上下の余白
+
+[window.class]
+instance = "Alacritty"
+general = "Alacritty"
+
+# ==========================================
+# カーソル設定
+# ==========================================
+[cursor]
+style = "Block"             # cursor-style = block (ブロック型カーソル)
+blink_interval = 0          # cursor-style-blink = false (0で点滅をオフ)
+vi_mode_style = "None"
+unfocused_hollow = true     # ウィンドウが非アクティブな時にカーソルを空欄にする
+thickness = 0.15
+
+# ==========================================
+# スクロール・選択挙動
+# ==========================================
+[scrolling]
+history = 10000             # scrollback-limit = 10000 (遡れる過去ログの行数)
+multiplier = 3              # マウスホイールでのスクロール速度の倍率
+
+[selection]
+semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
+save_to_clipboard = true    # copy-on-select = clipboard (選択時に自動コピー)
+
+# ==========================================
+# マウス設定
+# ==========================================
+[mouse]
+hide_when_typing = true     # mouse-hide-while-typing = true (入力中にカーソルを隠す)
+
+[[mouse.bindings]]
+mouse = "Middle"
+action = "PasteSelection"
+
+# ==========================================
+# キーボードショートカット
+# ==========================================
+[keyboard]
+[[keyboard.bindings]]
+key = "Paste"
+action = "Paste"
+
+[[keyboard.bindings]]
+key = "Copy"
+action = "Copy"
+
+[[keyboard.bindings]]
+key = "L"
+mods = "Control"
+action = "ClearLogNotice"
+
+[[keyboard.bindings]]
+key = "L"
+mods = "Control"
+mode = "~Vi"
+chars = "\f"
+
+[[keyboard.bindings]]
+key = "PageUp"
+mods = "Shift"
+mode = "~Alt"
+action = "ScrollPageUp"
+
+[[keyboard.bindings]]
+key = "PageDown"
+mods = "Shift"
+mode = "~Alt"
+action = "ScrollPageDown"
+
+[[keyboard.bindings]]
+key = "Home"
+mods = "Shift"
+mode = "~Alt"
+action = "ScrollToTop"
+
+[[keyboard.bindings]]
+key = "End"
+mods = "Shift"
+mode = "~Alt"
+action = "ScrollToBottom"
+
+[[keyboard.bindings]]
+key = "V"
+mods = "Control|Shift"
+action = "Paste"
+
+[[keyboard.bindings]]
+key = "C"
+mods = "Control|Shift"
+action = "Copy"
+
+[[keyboard.bindings]]
+key = "F"
+mods = "Control|Shift"
+action = "SearchForward"
+
+[[keyboard.bindings]]
+key = "B"
+mods = "Control|Shift"
+action = "SearchBackward"
+
+[[keyboard.bindings]]
+key = "C"
+mods = "Control|Shift"
+mode = "Vi"
+action = "ClearSelection"
+
+[[keyboard.bindings]]
+key = "Key0"
+mods = "Control"
+action = "ResetFontSize"

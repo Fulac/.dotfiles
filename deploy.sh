@@ -8,16 +8,21 @@ fi
 args=${1:-client}
 
 ### Variables ###
-DOTFILES_PATH=$(cd $(dirname $0); pwd)
+DOTFILES_PATH=$(
+  cd $(dirname $0)
+  pwd
+)
 DOTFILES_ZSH_PATH="${DOTFILES_PATH}/zsh"
 DOTFILES_FISH_PATH="${DOTFILES_PATH}/fish"
 DOTFILES_VIM_PATH="${DOTFILES_PATH}/vim"
 DOTFILES_NVIM_PATH="${DOTFILES_PATH}/nvim"
 DOTFILES_GHOSTTY_PATH="${DOTFILES_PATH}/ghostty"
+DOTFILES_ALACRITTY_PATH="${DOTFILES_PATH}/alacritty"
 FISH_CONFIG_PATH="${HOME}/.config/fish"
 VIM_CONFIG_PATH="${HOME}/.vim"
 NVIM_CONFIG_PATH="${HOME}/.config/nvim"
 GHOSTTY_CONFIG_PATH="${HOME}/.config/ghostty"
+ALACRITTY_CONFIG_PATH="${HOME}/.config/alacritty"
 
 ### zsh ###
 ln -sf ${DOTFILES_ZSH_PATH}/zshrc ${HOME}/.zshrc
@@ -52,7 +57,7 @@ echo "make symbolic link '.config/sheldon' at ${DOTFILES_ZSH_PATH}/sheldon"
 #  if [ $args = "-client" ] || [ $args = "-c" ]; then
 #    ln -sf ~/dotfiles/fish/functions/fish_prompt.fish ${FISH_CONFIG_PATH}/functions/fish_prompt.fish
 #    echo "make symbolic link 'fish/functions/fish_prompt.fish' at ${FISH_CONFIG_PATH}/functions"
-#  elif [ $args = "-server" ] || [ $args = "-s" ]; then 
+#  elif [ $args = "-server" ] || [ $args = "-s" ]; then
 #    ln -sf ~/dotfiles/fish/functions/fish_server_prompt.fish ${FISH_CONFIG_PATH}/functions/fish_prompt.fish
 #    echo "make symbolic link 'fish/functions/fish_server_prompt.fish' at ${FISH_CONFIG_PATH}/functions"
 #  fi
@@ -77,10 +82,19 @@ ln -sf ${DOTFILES_VIM_PATH} ${VIM_CONFIG_PATH}
 echo "make symbolic link 'vim' at ${HOME}"
 
 ### Ghostty ###
-if [[ -L ${GHOSTTY_CONFIG_PATH}/config.ghostty || -f ${GHOSTTY_CONFIG_PATH}/config.ghostty ]]; then
-  unlink ${GHOSTTY_CONFIG_PATH}/config.ghostty
+# if [[ -L ${GHOSTTY_CONFIG_PATH}/config.ghostty || -f ${GHOSTTY_CONFIG_PATH}/config.ghostty ]]; then
+#   unlink ${GHOSTTY_CONFIG_PATH}/config.ghostty
+# else
+#   mkdir -p ${GHOSTTY_CONFIG_PATH}
+# fi
+# ln -sf ${DOTFILES_GHOSTTY_PATH}/config.ghostty ${GHOSTTY_CONFIG_PATH}/config.ghostty
+# echo "make symbolic link 'ghostty' at ${HOME}/.config/ghostty/config.ghostty"
+
+### Alacritty ###
+if [[ -L ${ALACRITTY_CONFIG_PATH}/alacritty.toml || -f ${ALACRITTY_CONFIG_PATH}/alacritty.toml ]]; then
+  unlink ${ALACRITTY_CONFIG_PATH}/alacritty.toml
 else
-  mkdir -p ${GHOSTTY_CONFIG_PATH}
+  mkdir -p ${ALACRITTY_CONFIG_PATH}
 fi
-ln -sf ${DOTFILES_GHOSTTY_PATH}/config.ghostty ${GHOSTTY_CONFIG_PATH}/config.ghostty
-echo "make symbolic link 'ghostty' at ${HOME}/.config/ghostty"
+ln -sf ${DOTFILES_ALACRITTY_PATH}/alacritty.toml ${DOTFILES_ALACRITTY_PATH}/alacritty.toml
+echo "make symbolic link 'ghostty' at ${HOME}/.config/alacritty/alacritty.toml"
