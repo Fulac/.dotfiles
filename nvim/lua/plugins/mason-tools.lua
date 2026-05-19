@@ -9,7 +9,6 @@ return {
       "stylua",
       "prettier",
       "clang-format",
-      "shfmt",
       -- リンター
       "yamllint",
       "markdownlint",

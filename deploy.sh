@@ -66,8 +66,8 @@ setup_nvim_python_env() {
 
   # nvim, python, uv のすべてがインストールされているか確認
   if command -v nvim >/dev/null 2>&1 &&
-    command -v python >/dev/null 2>&1 &&
-    command -v uv >/dev/null 2>&1; then
+     command -v python >/dev/null 2>&1 &&
+     command -v uv >/dev/null 2>&1; then
 
     # すでに仮想環境があり、pynvimが導入済みかチェック
     if [ -x "$NVIM_VENV_PYTHON" ] && "$NVIM_VENV_PYTHON" -c "import pynvim" >/dev/null 2>&1; then
