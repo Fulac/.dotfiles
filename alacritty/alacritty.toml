@@ -15,7 +15,10 @@ WINIT_X11_SCALE_FACTOR = "1"
 # フォント設定（Ghosttyの指定を優先）
 # ==========================================
 [font]
-size = 12.0
+offset = { x = 0, y = 0 }       # オフセット（位置）を微調整する
+glyph_offset = { x = 0, y = 0 } # アイコンなどのグリフだけを位置調整したい場合に使用
+
+size = 11.9
 
 [font.normal]
 family = "Bizin Gothic NF"  # font-family = Bizin Gothic NF
@@ -32,14 +35,6 @@ style = "Italic"
 [font.bold_italic]
 family = "Bizin Gothic NF"
 style = "Bold Italic"
-
-[font.offset] # オフセット（位置）を微調整する
-x = 0
-y = -1
-
-[font.glyph_offset] # アイコンなどのグリフだけを位置調整したい場合に使用
-x = 0
-y = 0   # アイコンなどのグリフだけをずらしたい場合はここを 1 や -1 にします。
 
 # ==========================================
 # カラーパレット
