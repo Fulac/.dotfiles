@@ -1,100 +1,87 @@
 #!/bin/sh
 
-if [ $# -ge 2 ]; then
-  echo "Usage: $0 -client(-c) or -server(-s) (Default: -client)"
-  exit 1
-fi
+# エラー発生時、または未定義変数参照時にスクリプトを終了させる（堅牢性の向上）
+set -eu
 
-args=${1:-client}
+# 使い方表示関数
+usage() {
+  echo "Usage: $0 [-c|-client] [-s|-server]"
+  exit 1
+}
+
+# 引数の解析（デフォルトは client）
+ARGS="client"
+case "${1:-}" in
+-client | -c | "") ARGS="client" ;;
+-server | -s) ARGS="server" ;;
+*) usage ;;
+esac
 
 ### Variables ###
-DOTFILES_PATH=$(
-  cd $(dirname $0)
-  pwd
-)
+DOTFILES_PATH=$(cd "$(dirname "$0")" && pwd)
+
+# 設定元（dotfiles側）のパス
 DOTFILES_ZSH_PATH="${DOTFILES_PATH}/zsh"
-DOTFILES_FISH_PATH="${DOTFILES_PATH}/fish"
 DOTFILES_VIM_PATH="${DOTFILES_PATH}/vim"
 DOTFILES_NVIM_PATH="${DOTFILES_PATH}/nvim"
-DOTFILES_GHOSTTY_PATH="${DOTFILES_PATH}/ghostty"
 DOTFILES_ALACRITTY_PATH="${DOTFILES_PATH}/alacritty"
-FISH_CONFIG_PATH="${HOME}/.config/fish"
+
+# 配置先（HOME側）のパス
+CONFIG_DIR="${HOME}/.config"
 VIM_CONFIG_PATH="${HOME}/.vim"
-NVIM_CONFIG_PATH="${HOME}/.config/nvim"
-GHOSTTY_CONFIG_PATH="${HOME}/.config/ghostty"
-ALACRITTY_CONFIG_PATH="${HOME}/.config/alacritty"
+NVIM_CONFIG_PATH="${CONFIG_DIR}/nvim"
+ALACRITTY_CONFIG_PATH="${CONFIG_DIR}/alacritty"
 
-### zsh ###
-ln -sf ${DOTFILES_ZSH_PATH}/zshrc ${HOME}/.zshrc
-echo "make symbolic link '.zshrc' at ${HOME}"
+### Helper Functions ###
 
-if [ ! -d ${HOME}.config ]; then
-  mkdir -p ${HOME}/.config
+# シンボリックリンクを安全に作成する共通関数
+deploy_link() {
+  local src="$1"
+  local dst="$2"
+  local name="$3"
+
+  # ターゲットの親ディレクトリが存在しない場合は作成
+  local dst_dir
+  dst_dir=$(dirname "$dst")
+  if [ ! -d "$dst_dir" ]; then
+    mkdir -p "$dst_dir"
+  fi
+
+  # 既存のリンク、ファイル、ディレクトリを安全に削除
+  if [ -L "$dst" ] || [ -e "$dst" ]; then
+    rm -rf "$dst"
+  fi
+
+  ln -sf "$src" "$dst"
+  echo "Created symbolic link for [$name] at: $dst"
+}
+
+### Main Deployment Flow ###
+
+echo "Starting deployment in [$ARGS] mode..."
+
+# 1. zsh (client / server 両方で必ず実行)
+deploy_link "${DOTFILES_ZSH_PATH}/zshrc" "${HOME}/.zshrc" "zshrc"
+deploy_link "${DOTFILES_ZSH_PATH}/sheldon" "${CONFIG_DIR}/sheldon" "sheldon"
+
+# 2. Vim (client / server 両方で必ず実行)
+deploy_link "${DOTFILES_VIM_PATH}" "${VIM_CONFIG_PATH}" "Vim"
+
+# 3. Neovim (clientの場合は必須、serverの場合はインストール済みの場合のみ)
+if [ "$ARGS" = "client" ]; then
+  deploy_link "${DOTFILES_NVIM_PATH}" "${NVIM_CONFIG_PATH}" "Neovim"
+elif [ "$ARGS" = "server" ]; then
+  # nvim コマンドが存在するかチェック
+  if command -v nvim >/dev/null 2>&1; then
+    deploy_link "${DOTFILES_NVIM_PATH}" "${NVIM_CONFIG_PATH}" "Neovim (Server)"
+  else
+    echo "ℹ️  Neovim is not installed. Skipping Neovim configuration."
+  fi
 fi
-ln -sf ${DOTFILES_ZSH_PATH}/sheldon ${HOME}/.config/sheldon
-echo "make symbolic link '.config/sheldon' at ${DOTFILES_ZSH_PATH}/sheldon"
 
-### fish ###
-#if [ -d ${FISH_CONFIG_PATH} ]; then
-#  # config.fish
-#  if [ -e ${FISH_CONFIG_PATH}/config.fish ]; then
-#    unlink ${FISH_CONFIG_PATH}/config.fish
-#  fi
-#  ln -sf ${DOTFILES_FISH_PATH}/config.fish ${FISH_CONFIG_PATH}/config.fish
-#  echo "make symbolic link 'fish/config.fish' at ${FISH_CONFIG_PATH}"
-#
-#  # ls_after_cd.fish
-#  if [ -e ${FISH_CONFIG_PATH}/conf.d/ls_after_cd.fish ]; then
-#    unlink ${FISH_CONFIG_PATH}/conf.d/ls_after_cd.fish
-#  fi
-#  ln -sf ~/dotfiles/fish/conf.d/ls_after_cd.fish ${FISH_CONFIG_PATH}/conf.d/ls_after_cd.fish
-#  echo "make symbolic link 'fish/conf.d/ls_after_cd.fish' at ${FISH_CONFIG_PATH}/fish/conf.d"
-#
-#  # fish_prompt.fish
-#  if [ -e ${FISH_CONFIG_PATH}/functions/fish_prompt.fish ]; then
-#    unlink ${FISH_CONFIG_PATH}/functions/fish_prompt.fish
-#  fi
-#  if [ $args = "-client" ] || [ $args = "-c" ]; then
-#    ln -sf ~/dotfiles/fish/functions/fish_prompt.fish ${FISH_CONFIG_PATH}/functions/fish_prompt.fish
-#    echo "make symbolic link 'fish/functions/fish_prompt.fish' at ${FISH_CONFIG_PATH}/functions"
-#  elif [ $args = "-server" ] || [ $args = "-s" ]; then
-#    ln -sf ~/dotfiles/fish/functions/fish_server_prompt.fish ${FISH_CONFIG_PATH}/functions/fish_prompt.fish
-#    echo "make symbolic link 'fish/functions/fish_server_prompt.fish' at ${FISH_CONFIG_PATH}/functions"
-#  fi
-#fi
-
-### Neovim ###
-if [ -L ${NVIM_CONFIG_PATH} ]; then
-  unlink ${NVIM_CONFIG_PATH}
-elif [ -d ${NVIM_CONFIG_PATH} ]; then
-  rm -rf ${NVIM_CONFIG_PATH}
+# 4. Alacritty (client の場合のみ実行)
+if [ "$ARGS" = "client" ]; then
+  deploy_link "${DOTFILES_ALACRITTY_PATH}/alacritty.toml" "${ALACRITTY_CONFIG_PATH}/alacritty.toml" "Alacritty"
 fi
-ln -sf ${DOTFILES_NVIM_PATH} ${NVIM_CONFIG_PATH}
-echo "make symbolic link 'nvim' at ${HOME}/.config"
 
-### Vim ###
-if [ -L ${VIM_CONFIG_PATH} ]; then
-  unlink ${VIM_CONFIG_PATH}
-elif [ -d ${VIM_CONFIG_PATH} ]; then
-  rm -rf ${VIM_CONFIG_PATH}
-fi
-ln -sf ${DOTFILES_VIM_PATH} ${VIM_CONFIG_PATH}
-echo "make symbolic link 'vim' at ${HOME}"
-
-### Ghostty ###
-# if [[ -L ${GHOSTTY_CONFIG_PATH}/config.ghostty || -f ${GHOSTTY_CONFIG_PATH}/config.ghostty ]]; then
-#   unlink ${GHOSTTY_CONFIG_PATH}/config.ghostty
-# else
-#   mkdir -p ${GHOSTTY_CONFIG_PATH}
-# fi
-# ln -sf ${DOTFILES_GHOSTTY_PATH}/config.ghostty ${GHOSTTY_CONFIG_PATH}/config.ghostty
-# echo "make symbolic link 'ghostty' at ${HOME}/.config/ghostty/config.ghostty"
-
-### Alacritty ###
-if [[ -L ${ALACRITTY_CONFIG_PATH}/alacritty.toml || -f ${ALACRITTY_CONFIG_PATH}/alacritty.toml ]]; then
-  unlink ${ALACRITTY_CONFIG_PATH}/alacritty.toml
-else
-  mkdir -p ${ALACRITTY_CONFIG_PATH}
-fi
-ln -sf ${DOTFILES_ALACRITTY_PATH}/alacritty.toml ${ALACRITTY_CONFIG_PATH}/alacritty.toml
-echo "make symbolic link 'ghostty' at ${HOME}/.config/alacritty/alacritty.toml"
+echo "Dotfiles deployment completed successfully! [Mode: $ARGS]"
