@@ -100,14 +100,18 @@ deploy_link "${DOTFILES_ZSH_PATH}/sheldon" "${CONFIG_DIR}/sheldon" "sheldon"
 deploy_link "${DOTFILES_VIM_PATH}" "${VIM_CONFIG_PATH}" "Vim"
 
 # Neovim (clientの場合は必須、serverの場合はインストール済みの場合のみ)
+IS_NVIM_INSTALLED=false
+if command -v nvim >/dev/null 2>&1; then
+  IS_NVIM_INSTALLED=true
+fi
+
 if [ "$ARGS" = "client" ]; then
   deploy_link "${DOTFILES_NVIM_PATH}" "${NVIM_CONFIG_PATH}" "Neovim"
 elif [ "$ARGS" = "server" ]; then
-  # nvim コマンドが存在するかチェック
-  if command -v nvim >/dev/null 2>&1; then
+  if [ "$IS_NVIM_INSTALLED" = true ]; then
     deploy_link "${DOTFILES_NVIM_PATH}" "${NVIM_CONFIG_PATH}" "Neovim (Server)"
   else
-    echo "Neovim is not installed. Skipping Neovim configuration."
+    echo "ℹ️  Neovim is not installed. Skipping Neovim configuration."
   fi
 fi
 
