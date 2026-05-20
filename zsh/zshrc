@@ -61,6 +61,8 @@ if [[ -d "/opt/cuda" ]]; then
   export PATH="/opt/cuda/bin:${PATH}"
   export LD_LIBRARY_PATH="/opt/cuda/lib64:$LD_LIBRARY_PATH"
   export CUDA_HOME="/opt/cuda"
+  # CUDA: 互換GCCを指定（CUDA 13.2はGCC 15まで対応）
+  export NVCC_CCBIN=/usr/bin/g++-15
 fi
 
 # --------------------------------------------
