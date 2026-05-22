@@ -12,9 +12,9 @@ usage() {
 # 引数の解析（デフォルトは client）
 ARGS="client"
 case "${1:-}" in
--client | -c | "") ARGS="client" ;;
--server | -s) ARGS="server" ;;
-*) usage ;;
+  -client | -c | "") ARGS="client" ;;
+  -server | -s) ARGS="server" ;;
+  *) usage ;;
 esac
 
 ### Variables ###
