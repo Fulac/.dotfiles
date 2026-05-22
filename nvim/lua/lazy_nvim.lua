@@ -57,4 +57,4 @@ local opts = {
 }
 
 -- Any lua file in ~/.config/nvim/lua/pulgins/*.lua will be automatically merged
-require( 'lazy' ).setup( plugins, opts )
+require('lazy').setup(plugins, opts)

@@ -13,10 +13,11 @@ return {
     -- 2. keymap (通常の文字入力モードでのキーマップ)
     keymap = {
       preset = "enter",
-      -- change TAB, S-TAB 
+      -- change TAB, S-TAB
       ['<Tab>'] = {
         function(cmp)
-          if cmp.snippet_active() then return cmp.accept()
+          if cmp.snippet_active() then
+            return cmp.accept()
           else
             local list = require('blink.cmp.completion.list')
             if #list.items == 1 then
@@ -31,7 +32,8 @@ return {
       },
       ['<S-Tab>'] = {
         function(cmp)
-          if cmp.snippet_active() then return cmp.accept()
+          if cmp.snippet_active() then
+            return cmp.accept()
           else
             local list = require('blink.cmp.completion.list')
             if #list.items == 1 then

@@ -22,8 +22,8 @@ return {
     version = false,
     lazy = false,
     opts = {
-        modes = { insert = true, command = false, terminal = false },
-        mappings = {},
+      modes = { insert = true, command = false, terminal = false },
+      mappings = {},
     },
   },
 
