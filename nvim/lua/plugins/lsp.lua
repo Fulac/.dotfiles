@@ -5,7 +5,7 @@ return {
   {
     "williamboman/mason.nvim",
     cmd = "Mason",
-    keys = { { "<leader>cm", "<cmd>Mason<cr>", desc = "Mason Management" } },
+    keys = { { "<leader>lm", "<cmd>Mason<cr>", desc = "Mason Management" } },
     opts = {
       ui = {
         border = "rounded", -- Mason管理画面の外枠も丸角に統一

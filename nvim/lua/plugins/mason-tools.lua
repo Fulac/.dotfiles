@@ -6,7 +6,6 @@ return {
     -- ここに記述したLinter/Formatterが、起動時にMason経由で自動インストールされる
     ensure_installed = {
       -- フォーマッター
-      "stylua",
       "prettier",
       "clang-format",
       -- リンター

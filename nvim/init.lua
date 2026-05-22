@@ -2,35 +2,31 @@
 -- key mapping
 ----------------------------------------------
 -- jf でノーマルモードへ戻る
-vim.keymap.set( 'i', 'jf', '<ESC>' )
-vim.keymap.set( 'i', 'ｊｆ', '<ESC>' )
+vim.keymap.set("i", "jf", "<ESC>")
+vim.keymap.set("i", "ｊｆ", "<ESC>")
 
 -- 検索のハイライトを解除する (<Esc><Esc>で)
-vim.keymap.set( 'n', '<ESC><ESC>', ':nohlsearch<CR><ESC>' )
+vim.keymap.set("n", "<ESC><ESC>", ":nohlsearch<CR><ESC>")
 
 -- 押しづらいキーを置き換える
-vim.keymap.set( 'n', '<Space>h', '^' )
-vim.keymap.set( 'n', '<Space>l', '$' )
-vim.keymap.set( 'n', '<Space>j', '%' )
-
--- 単語補完を一覧の逆順にカーソルを動かして行う
-vim.keymap.set( 'i', '<C-f>', '<C-p>' )
+vim.keymap.set("n", "H", "^")
+vim.keymap.set("n", "L", "$")
 
 -- ウィンドウ移動(上、下、左、右、次)
-vim.keymap.set( 'n', '<C-k>', '<C-w>k' )
-vim.keymap.set( 'n', '<C-j>', '<C-w>j' )
-vim.keymap.set( 'n', '<C-h>', '<C-w>h' )
-vim.keymap.set( 'n', '<C-l>', '<C-w>l' )
+vim.keymap.set("n", "<C-k>", "<C-w>k")
+vim.keymap.set("n", "<C-j>", "<C-w>j")
+vim.keymap.set("n", "<C-h>", "<C-w>h")
+vim.keymap.set("n", "<C-l>", "<C-w>l")
 
 -- タブ移動(次、前)
-vim.keymap.set('n', 'tt', 'gt' )
-vim.keymap.set('n', 'tr', 'gT' )
+vim.keymap.set("n", "tt", "gt")
+vim.keymap.set("n", "tr", "gT")
 
 -- <Leader>を<Space>に割り当てる
-vim.g.mapleader = ' '
+vim.g.mapleader = " "
 
 -- <LocalLeader>をカンマに割り当てる
-vim.g.maplocalleader = ','
+vim.g.maplocalleader = ","
 
 ----------------------------------------------
 -- ファイル処理関連の設定
@@ -90,7 +86,7 @@ vim.opt.autoindent = true
 -- 動作環境との統合関連の設定
 ----------------------------------------------
 -- マウスの入力を受け付ける
-vim.opt.mouse = 'a'
+vim.opt.mouse = "a"
 
 ----------------------------------------------
 -- ビープの設定
@@ -105,17 +101,17 @@ vim.opt.errorbells = false
 -- 文字コードの設定
 ----------------------------------------------
 -- 内部処理コードの設定
-vim.opt.encoding = 'utf-8'
+vim.opt.encoding = "utf-8"
 
 -- 空ファイルの文字コードの設定
-vim.opt.fileencoding = 'utf-8'
+vim.opt.fileencoding = "utf-8"
 
 -- 既存ファイルの文字コード優先設定
-vim.opt.fileencodings = { 'ucs-bom', 'utf-8', 'iso-2022', 'cp932', 'default', 'latin' }
+vim.opt.fileencodings = { "ucs-bom", "utf-8", "iso-2022", "cp932", "default", "latin" }
 
 -- Ambiguous Width Charactersの設定
 -- 表示が崩れる特定の文字（コードポイント）だけをピンポイントで「幅2」に強制上書きする
-vim.opt.ambiwidth = 'single'
+vim.opt.ambiwidth = "single"
 vim.fn.setcellwidths({
   { 0x2026, 0x2026, 2 }, -- … (三点リーダー)
   { 0x203b, 0x203b, 2 }, -- ※ (米印)
@@ -125,13 +121,13 @@ vim.fn.setcellwidths({
 })
 
 -- Menuの言語設定
-vim.opt.langmenu = 'none'
+vim.opt.langmenu = "none"
 
 ----------------------------------------------
 -- vimの色関係
 ----------------------------------------------
 -- ハイライト on
-vim.opt.syntax = 'on'
+vim.opt.syntax = "on"
 
 vim.opt.termguicolors = true
 
@@ -175,10 +171,10 @@ vim.opt.splitright = true
 -- カーソル移動関連の設定
 ----------------------------------------------
 -- Backspaceキーの影響範囲に制限を設けない
-vim.opt.backspace = { 'indent', 'eol', 'start' }
+vim.opt.backspace = { "indent", "eol", "start" }
 
 -- 行頭行末の左右移動で行をまたぐ
-vim.opt.whichwrap = 'b,s,h,l,<,>,[,]'
+vim.opt.whichwrap = "b,s,h,l,<,>,[,]"
 
 -- 上下８行の視界確保
 vim.opt.scrolloff = 8
@@ -195,81 +191,79 @@ vim.opt.sidescroll = 1
 local cellwidths = vim.fn.getcellwidths()
 
 -- Unicode Standard Miscellaneous Symbols
-table.insert( cellwidths, {0x2600, 0x26ff, 1} )
+table.insert(cellwidths, { 0x2600, 0x26ff, 1 })
 
 -- Seti-UI + Custom
-table.insert( cellwidths, {0xe5fa, 0xe6ac, 1} )
+table.insert(cellwidths, { 0xe5fa, 0xe6ac, 1 })
 
 -- Devicons
-table.insert( cellwidths, {0xe700, 0xe7c5, 1} )
+table.insert(cellwidths, { 0xe700, 0xe7c5, 1 })
 
 -- Font Awesome
-table.insert( cellwidths, {0xf000, 0xf2e0, 1} )
+table.insert(cellwidths, { 0xf000, 0xf2e0, 1 })
 
 -- Font Awesome Extension
-table.insert( cellwidths, {0xe200, 0xe2a9, 1} )
+table.insert(cellwidths, { 0xe200, 0xe2a9, 1 })
 
 -- Material Design Icons
-table.insert( cellwidths, {0xf0001, 0xf1af0, 1} )
+table.insert(cellwidths, { 0xf0001, 0xf1af0, 1 })
 
 -- Weather
-table.insert( cellwidths, {0xe300, 0xe3e3, 1} )
+table.insert(cellwidths, { 0xe300, 0xe3e3, 1 })
 
 -- Octicons
-table.insert( cellwidths, {0xf400, 0xf532, 1} )
+table.insert(cellwidths, { 0xf400, 0xf532, 1 })
 
 -- Powerline Symbols
-table.insert( cellwidths, {0xe0a0, 0xe0a2, 1} )
-table.insert( cellwidths, {0xe0b0, 0xe0b3, 1} )
+table.insert(cellwidths, { 0xe0a0, 0xe0a2, 1 })
+table.insert(cellwidths, { 0xe0b0, 0xe0b3, 1 })
 
 -- Powerline Extra Symbols
-table.insert( cellwidths, {0xe0a3, 0xe0a3, 1} )
-table.insert( cellwidths, {0xe0b4, 0xe0c8, 1} )
-table.insert( cellwidths, {0xe0ca, 0xe0ca, 1} )
-table.insert( cellwidths, {0xe0cc, 0xe0d4, 1} )
+table.insert(cellwidths, { 0xe0a3, 0xe0a3, 1 })
+table.insert(cellwidths, { 0xe0b4, 0xe0c8, 1 })
+table.insert(cellwidths, { 0xe0ca, 0xe0ca, 1 })
+table.insert(cellwidths, { 0xe0cc, 0xe0d4, 1 })
 
 -- IEC Power Symbols
-table.insert( cellwidths, {0x23fb, 0x23fe, 1} )
-table.insert( cellwidths, {0x2b58, 0x2b58, 1} )
+table.insert(cellwidths, { 0x23fb, 0x23fe, 1 })
+table.insert(cellwidths, { 0x2b58, 0x2b58, 1 })
 
 -- Font Logos
-table.insert( cellwidths, {0xf300, 0xf32f, 1} )
+table.insert(cellwidths, { 0xf300, 0xf32f, 1 })
 
 -- Pomicons
-table.insert( cellwidths, {0xe000, 0xe00a, 1} )
+table.insert(cellwidths, { 0xe000, 0xe00a, 1 })
 
 -- Codicons
-table.insert( cellwidths, {0xea60, 0xebeb, 1} )
+table.insert(cellwidths, { 0xea60, 0xebeb, 1 })
 
 -- Heavy Angle Brackets
-table.insert( cellwidths, {0x276c, 0x2771, 1} )
+table.insert(cellwidths, { 0x276c, 0x2771, 1 })
 
 -- Box Drawing
-table.insert( cellwidths, {0x2500, 0x259f, 1} )
+table.insert(cellwidths, { 0x2500, 0x259f, 1 })
 
-vim.fn.setcellwidths( cellwidths )
+vim.fn.setcellwidths(cellwidths)
 
 ----------------------------------------------
 -- Install Plugin
 ----------------------------------------------
 -- lazy.nvim
-require( 'lazy_nvim' )
+require("lazy_nvim")
 
 ----------------------------------------------
 -- os個別設定
 ----------------------------------------------
-if vim.fn.has( 'win64' ) == 1 then
-  OSTYPE = 'Windows'
+if vim.fn.has("win64") == 1 then
+  OSTYPE = "Windows"
 else
-  OSTYPE = 'Linux'
+  OSTYPE = "Linux"
 end
 
-if OSTYPE == 'Linux' then
+if OSTYPE == "Linux" then
   -- python3のパス設定
-  vim.g.python3_host_prog = vim.fn.expand('~/.local/share/nvim/venv/bin/python')
-
-elseif OSTYPE == 'Windows\n' then
+  vim.g.python3_host_prog = vim.fn.expand("~/.local/share/nvim/venv/bin/python")
+elseif OSTYPE == "Windows\n" then
   -- python3のパス設定
-  vim.g.python3_host_prog = vim.fn.expand('C:/Users/fulac/Programs/Python/Python38/python')
-
+  vim.g.python3_host_prog = vim.fn.expand("C:/Users/fulac/Programs/Python/Python38/python")
 end
