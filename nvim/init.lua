@@ -28,6 +28,9 @@ vim.g.mapleader = " "
 -- <LocalLeader>をカンマに割り当てる
 vim.g.maplocalleader = ","
 
+-- Leader系キーマップのタイムアウト（which-keyのdelay値と揃える）
+vim.opt.timeoutlen = 500
+
 ----------------------------------------------
 -- ファイル処理関連の設定
 ----------------------------------------------
