@@ -79,7 +79,7 @@ return {
           if client then
             -- インレイヒント (対応サーバーのみ。<leader>ch でトグル)
             if client:supports_method("textDocument/inlayHint") then
-              vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+              vim.lsp.inlay_hint.enable(false, { bufnr = bufnr })
               map("n", "<leader>ch", function()
                 vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
               end, "Toggle Inlay Hints")
@@ -150,7 +150,7 @@ return {
               library = vim.api.nvim_get_runtime_file("", true), -- Neovim ランタイムを認識
             },
             diagnostics = {
-              globals = { "vim" }, -- "vim" 変数への未定義警告を抑止
+              globals = { "vim" },    -- "vim" 変数への未定義警告を抑止
             },
             hint = { enable = true }, -- インレイヒントを有効化
             telemetry = { enable = false },
