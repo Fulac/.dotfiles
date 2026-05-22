@@ -6,21 +6,23 @@ return {
     preset = "modern",
     -- ポップアップが表示されるまでの遅延（ms）
     delay = 500,
-    -- アイコンを表示するかどうか（mini.icons や nvim-web-devicons と連携）
+    -- アイコン表示を無効化
     icons = {
-      mappings = true,
+      mappings = false, -- desc から推測される自動アイコンを抑止
+      rules = false,    -- 自動アイコンルール (filetype 連想など) も抑止
+      keys = {},        -- 特殊キー (<Tab>, <CR> 等) のアイコンも全て無効化
     },
     -- 階層やグループにDescriptionを設定
     spec = {
-      { "<leader>c", group = "Code (LSP操作)", icon = " " },
-      { "<leader>f", group = "Find/File", icon = "󰈞 " },
-      { "<leader>g", group = "Git", icon = " " },
-      { "<leader>l", group = "LSP (管理)", icon = " " },
-      { "<leader>x", group = "Diagnostics", icon = " " },
-      { "<leader>m", group = "Markdown", icon = " " },
+      { "<leader>c", group = "Code (LSP操作)" },
+      { "<leader>f", group = "Find/File" },
+      { "<leader>g", group = "Git" },
+      { "<leader>l", group = "LSP (管理)" },
+      { "<leader>x", group = "Diagnostics" },
+      { "<leader>m", group = "Markdown" },
       { "<leader>b", group = "Buffer" },
       -- AI を追加するならここに
-      -- { "<leader>a", group = "AI (CodeCompanion)", icon = " " },
+      -- { "<leader>a", group = "AI (CodeCompanion)" },
     },
   },
   keys = {
