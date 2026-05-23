@@ -305,7 +305,7 @@ setup_nvim_python_env() {
 
   # pip install pynvim: Neovim 用 Python ブリッジ
   # 出力は抑制 (>/dev/null 2>&1) して、成功時のメッセージをシンプルに
-  "$venv_python" -m pip install pynvim >/dev/null 2>&1
+  uv pip install --python "$venv_python" >/dev/null 2>&1
   ok "Neovim Python environment ready"
 }
 
