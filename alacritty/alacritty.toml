@@ -43,28 +43,28 @@ style = "Bold Italic"
 draw_bold_text_with_bright_colors = true
 
 [colors.primary]
-background = "#0a0c11"      # background = #0a0c11
-foreground = "#c3d7d1"      # foreground = #c3d7d1
+background = "#0a0c11"
+foreground = "#c3d7d1"
 
 [colors.normal]
-black   = "#282c34"         # palette = 0
-red     = "#ed254e"         # palette = 1
-green   = "#71f79f"         # palette = 2
-yellow  = "#f9dc5c"         # palette = 3
-blue    = "#5c7aff"         # palette = 4
-magenta = "#dc9fea"         # palette = 5
-cyan    = "#00c1e4"         # palette = 6
-white   = "#dcdfe4"         # palette = 7
+black   = "#282c34"   # palette = 0
+red     = "#e05441"   # palette = 1
+green   = "#6db86d"   # palette = 2
+yellow  = "#bfb143"   # palette = 3
+blue    = "#4c77e6"   # palette = 4
+magenta = "#c943be"   # palette = 5
+cyan    = "#36cccc"   # palette = 6
+white   = "#dcdfe4"   # palette = 7
 
 [colors.bright]
-black   = "#282c34"         # palette = 8
-red     = "#ed254e"         # palette = 9
-green   = "#71f79f"         # palette = 10
-yellow  = "#f9dc5c"         # palette = 11
-blue    = "#5c7aff"         # palette = 12
-magenta = "#dc9fea"         # palette = 13
-cyan    = "#00c1e4"         # palette = 14
-white   = "#dcdfe4"         # palette = 15
+black   = "#5c6370"   # palette = 8
+red     = "#f76b59"   # palette = 9
+green   = "#8ce68c"   # palette = 10
+yellow  = "#e6d34e"   # palette = 11
+blue    = "#7196f8"   # palette = 12
+magenta = "#f55be9"   # palette = 13
+cyan    = "#66f2f2"   # palette = 14
+white   = "#ffffff"   # palette = 15
 
 # ==========================================
 # ウィンドウ・外観設定

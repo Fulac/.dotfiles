@@ -23,21 +23,43 @@ setopt magic_equal_subst
 setopt no_flow_control
 
 # cdの後にlsを実行
-chpwd() { ls --color=auto; }
+autoload -Uz add-zsh-hook
+_ls_after_cd() { ls --color=auto; }
+add-zsh-hook chpwd _ls_after_cd
 
 # --------------------------------------------
 # Aliases
 # --------------------------------------------
-alias ls="ls --color=auto"
-alias ll="ls -l --color=auto"
-alias la="ls -lA --color=auto"
+if type eza >/dev/null 2>&1; then
+  alias ls="eza --group-directories-first"
+  alias ll="eza -l --git --group-directories-first"
+  alias la="eza -la --git --group-directories-first"
+  alias lt="eza --tree --level=2 --git-ignore"
+  alias llt="eza -l --tree --level=2 --git --git-ignore"
+  alias lat="eza -la --tree --level=2 --git --git-ignore"
+  alias llz="eza -l --sort=size --reverse --total-size --git --group-directories-first"
+  alias laz="eza -la --sort=size --reverse --total-size --git --group-directories-first"
+else
+  alias ls="ls --color=auto"
+  alias ll="ls -l --color=auto"
+  alias la="ls -lA --color=auto"
+fi
+
 alias cl="clear"
 alias df="df -h"
 alias du="du -h"
+
+# Debian系のコマンド名差異を吸収
+if type batcat >/dev/null 2>&1 && ! type bat >/dev/null 2>&1; then
+  alias bat="batcat"
+fi
+if type fdfind >/dev/null 2>&1 && ! type fd >/dev/null 2>&1; then
+  alias fd="fdfind"
+fi
+
 alias ip="ip -color"
 alias -g @g='| grep'
 alias -g @f='| find'
-alias -g @l='| less'
 alias clab="sudo containerlab"
 alias nvpip="UV_PYTHON=${HOME}/.local/share/nvim/venv/bin/python uv pip"
 
@@ -61,24 +83,22 @@ if [[ -d "/opt/cuda" ]]; then
   export PATH="/opt/cuda/bin:${PATH}"
   export LD_LIBRARY_PATH="/opt/cuda/lib64:$LD_LIBRARY_PATH"
   export CUDA_HOME="/opt/cuda"
-  # CUDA: 互換GCCを指定（CUDA 13.2はGCC 15まで対応）
-  export NVCC_CCBIN=/usr/bin/g++-15
+  export NVCC_CCBIN=/usr/bin/g++-15 # CUDA: 互換GCCを指定（CUDA 13.2はGCC 15まで対応）
 fi
 
 # --------------------------------------------
-# sheldon（プラグインマネージャ）
+# sheldon **compinitよりも前に実行すること**
 # --------------------------------------------
-if [[ ! -f ${HOME}/.cargo/bin/sheldon ]]; then
-  command cargo install sheldon
+if type sheldon >/dev/null 2>&1; then
+  eval "$(sheldon source)"
 fi
-
-eval "$(sheldon source)"
 
 # --------------------------------------------
 # History
 # --------------------------------------------
-# ヒストリを保存するファイル
-HISTFILE=~/.zsh_history
+# ヒストリを保存するファイル（XDG state準拠）
+HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"
+[[ -d "${HISTFILE:h}" ]] || mkdir -p "${HISTFILE:h}"
 
 # メモリに保存されるヒストリの件数
 HISTSIZE=100000
@@ -100,20 +120,99 @@ setopt hist_reduce_blanks
 setopt hist_ignore_all_dups
 
 # --------------------------------------------
-# Ls Color
+# LS Color
 # --------------------------------------------
-# 補完時の色の設定
-export LS_COLORS='di=01;34:ln=01;35:so=01;32:ex=01;31:bd=46;34:cd=43;34:su=41;30:sg=46;30:tw=42;30:ow=43;30'
+# ファイルタイプとパーミッション状態
+LS_COLORS='di=01;34'          # directory: 太字+青
+LS_COLORS+=':ln=01;36'        # symlink: 太字+シアン
+LS_COLORS+=':or=01;38;5;208'  # orphaned symlink: 太字+オレンジ (壊れたリンク)
+LS_COLORS+=':mi=01;38;5;208'  # missing target: 太字+オレンジ
+LS_COLORS+=':pi=33'           # named pipe: 黄
+LS_COLORS+=':so=01;35'        # socket: 太字+マゼンタ
+LS_COLORS+=':do=01;35'        # door (Solaris): 太字+マゼンタ
+LS_COLORS+=':bd=01;33'        # block device: 太字+黄
+LS_COLORS+=':cd=01;33'        # character device: 太字+黄
+LS_COLORS+=':ex=01;32'        # executable: 太字+緑
 
-# 補完候補に色を付ける
-zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+# 危険な権限状態 (背景色で強調)
+LS_COLORS+=':su=37;41'        # setuid: 白文字+赤背景
+LS_COLORS+=':sg=30;43'        # setgid: 黒文字+黄背景
+LS_COLORS+=':tw=30;42'        # tmp + world-writable: 黒文字+緑背景
+LS_COLORS+=':ow=34;42'        # other-writable: 青文字+緑背景
+LS_COLORS+=':st=37;44'        # sticky bit only: 白文字+青背景
+LS_COLORS+=':ca=30;41'        # capability: 黒文字+赤背景
+
+# 圧縮ファイル (太字+赤)
+LS_COLORS+=':*.tar=01;31:*.tgz=01;31:*.tbz=01;31:*.tbz2=01;31:*.txz=01;31'
+LS_COLORS+=':*.zip=01;31:*.7z=01;31:*.rar=01;31'
+LS_COLORS+=':*.gz=01;31:*.bz2=01;31:*.xz=01;31:*.zst=01;31'
+LS_COLORS+=':*.deb=01;31:*.rpm=01;31:*.pkg.tar.zst=01;31'
+
+# 画像ファイル (太字+マゼンタ)
+LS_COLORS+=':*.jpg=01;35:*.jpeg=01;35:*.png=01;35:*.gif=01;35'
+LS_COLORS+=':*.bmp=01;35:*.webp=01;35:*.svg=01;35:*.ico=01;35'
+LS_COLORS+=':*.tiff=01;35:*.tif=01;35:*.heic=01;35:*.avif=01;35'
+
+# 動画ファイル (太字+マゼンタ、画像と統一)
+LS_COLORS+=':*.mp4=01;35:*.mkv=01;35:*.webm=01;35:*.avi=01;35'
+LS_COLORS+=':*.mov=01;35:*.wmv=01;35:*.flv=01;35:*.m4v=01;35'
+
+# 音声ファイル (シアン)
+LS_COLORS+=':*.mp3=00;36:*.flac=00;36:*.wav=00;36:*.ogg=00;36'
+LS_COLORS+=':*.m4a=00;36:*.opus=00;36:*.aac=00;36'
+
+# ドキュメントファイル (白)
+LS_COLORS+=':*.pdf=00;37:*.epub=00;37:*.djvu=00;37'
+LS_COLORS+=':*.doc=00;37:*.docx=00;37:*.odt=00;37'
+LS_COLORS+=':*.xls=00;37:*.xlsx=00;37:*.ods=00;37'
+LS_COLORS+=':*.ppt=00;37:*.pptx=00;37:*.odp=00;37'
+
+# テキスト・マークアップ (薄い白)
+LS_COLORS+=':*.txt=00;37:*.md=00;37:*.rst=00;37:*.org=00;37'
+LS_COLORS+=':*README*=01;37:*LICENSE*=01;37:*CHANGELOG*=01;37'
+
+# ソースコード (太字+黄)
+LS_COLORS+=':*.py=01;33:*.rs=01;33:*.go=01;33:*.c=01;33:*.cpp=01;33'
+LS_COLORS+=':*.h=01;33:*.hpp=01;33:*.java=01;33:*.kt=01;33'
+LS_COLORS+=':*.js=01;33:*.ts=01;33:*.jsx=01;33:*.tsx=01;33'
+LS_COLORS+=':*.rb=01;33:*.php=01;33:*.lua=01;33:*.zig=01;33'
+LS_COLORS+=':*.sh=01;33:*.zsh=01;33:*.bash=01;33:*.fish=01;33'
+
+# 設定ファイル (黄)
+LS_COLORS+=':*.toml=00;33:*.yaml=00;33:*.yml=00;33:*.json=00;33'
+LS_COLORS+=':*.ini=00;33:*.cfg=00;33:*.conf=00;33:*.config=00;33'
+LS_COLORS+=':*.xml=00;33:*.env=00;33'
+
+# 一時/バックアップファイル (薄い灰色)
+LS_COLORS+=':*.log=00;90:*.bak=00;90:*.tmp=00;90:*.swp=00;90'
+LS_COLORS+=':*.cache=00;90:*~=00;90:*.old=00;90:*.orig=00;90'
+
+# ロックファイル (薄い灰色)
+LS_COLORS+=':*.lock=00;90:*.pid=00;90'
+
+# 鍵・証明書 (赤、機密注意)
+LS_COLORS+=':*.pem=31:*.key=31:*.crt=31:*.cer=31:*.p12=31:*.pfx=31'
+
+export LS_COLORS
 
 # --------------------------------------------
 # Complement
 # --------------------------------------------
 # 補完機能を有効にする
-autoload -U compinit
-compinit
+autoload -Uz compinit
+
+# .zcompdump の格納先 (XDG準拠)
+ZSH_COMPDUMP="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump"
+
+# .zcompdumpが作成されていない、もしくは最終更新から24時間以上経過の場合にcompinitを実行する
+if [[ -n ${ZDOTDIR:-$HOME}/.zcompdump(#qN.mh+24) ]]; then
+  compinit -d "${ZSH_COMPDUMP}"
+else
+  compinit -C -d "${ZSH_COMPDUMP}"
+fi
+
+# 補完候補に色を付ける
+zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
 
 # 補完候補を一覧で表示する(d)
 setopt auto_list
@@ -157,21 +256,34 @@ zstyle ':completion:*' ignore-parents parent pwd
 # cd -<Tab> で今までに行ったディレクトリを表示かつ移動
 setopt auto_pushd
 
-# kubectlの補完設定
-if type kubectl >/dev/null 2>&1; then
-  source <(kubectl completion zsh)
-fi
+# --------------------------------------------
+# 外部コマンドの補完
+# --------------------------------------------
+# 補完スクリプトのキャッシュディレクトリ
+ZSH_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
+[[ -d "$ZSH_CACHE_DIR" ]] || mkdir -p "$ZSH_CACHE_DIR"
 
-# containerlabの補完設定
-if type containerlab >/dev/null 2>&1; then
-  source <(containerlab completion zsh)
-fi
+# 補完をキャッシュ経由でロードするヘルパー関数
+# Usage: load_completion <コマンド名> <生成コマンド>
+load_completion() {
+  local cmd="$1"
+  local gen_cmd="$2"
+  local cache_file="${ZSH_CACHE_DIR}/${cmd}_completion.zsh"
 
-# uvの補完設定
-if type uv >/dev/null 2>&1; then
-  eval "$(uv generate-shell-completion zsh)"
-  eval "$(uvx --generate-shell-completion zsh)"
-fi
+  if type "$cmd" >/dev/null 2>&1; then
+    # キャッシュが存在しない、またはコマンド本体より古い場合は再生成
+    if [[ ! -f "$cache_file" ]] || [[ "$(command -v $cmd)" -nt "$cache_file" ]]; then
+      eval "$gen_cmd" > "$cache_file"
+    fi
+    source "$cache_file"
+  fi
+}
+
+# 各種コマンドの補完をキャッシュ経由でロード
+load_completion kubectl      "kubectl completion zsh"
+load_completion containerlab "containerlab completion zsh"
+load_completion uv           "uv generate-shell-completion zsh"
+load_completion uvx          "uvx --generate-shell-completion zsh"
 
 # --------------------------------------------
 # Glob
@@ -181,6 +293,13 @@ setopt extended_glob
 
 # ファイルグロブで大文字小文字を区別しない
 unsetopt caseglob
+
+# --------------------------------------------
+# Zoxide (smarter cd)
+# --------------------------------------------
+if type zoxide >/dev/null 2>&1; then
+  eval "$(zoxide init zsh)"
+fi
 
 # --------------------------------------------
 # Prompt
