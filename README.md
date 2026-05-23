@@ -1,19 +1,4 @@
-# dotfiles
-
-XDG Base Directory 仕様に従った、マルチディストリ対応の dotfiles リポジトリ。
-
-CachyOS をメインに、Fedora / Ubuntu / Debian など複数のディストロで同一の設定を運用できる。
-
-## Features
-
-- **マルチディストリ対応** : Arch / Fedora / Debian 系のいずれでも `./bootstrap.sh` 一発で環境構築
-- **XDG Base Directory 準拠** : ホームディレクトリを汚さない設定配置
-- **モダン CLI ツール統合** : `eza`, `bat`, `ripgrep`, `fd`, `fzf`, `zoxide` などをデフォルト導入
-- **オプション機能** : Alacritty / Starship / Neovim をニーズに応じて除外可能
-- **シェル起動の高速化** : `compinit` の遅延チェック、外部コマンド補完のキャッシュ化
-- **冪等性** : 何度実行しても同じ結果になる安全な設計
-
-## Quick Start
+# Quick Start
 
 ```bash
 # 1. リポジトリをクローン
@@ -29,13 +14,6 @@ cd ~/.dotfiles
 # 4. zsh に切り替え
 exec zsh
 ```
-
-これだけで、以下の環境が一度に整う:
-
-- zsh (sheldon プラグイン管理, starship プロンプト)
-- Neovim (lazy.nvim プラグイン管理, Python venv 構築済み)
-- Alacritty (GPU 高速ターミナル)
-- モダン CLI ツール一式
 
 ## Tools and Applications
 
