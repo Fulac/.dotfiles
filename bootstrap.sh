@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#
+
 # ============================================================================
 # Multi-distro dotfiles bootstrap script
 # ============================================================================
@@ -462,6 +462,105 @@ install_tree_sitter_cli() {
 }
 
 # ============================================================================
+# Neovim AppImage installer (Debian系専用)
+# ============================================================================
+#
+# Debian/Ubuntu の apt リポジトリで提供される neovim はバージョンが古いため
+# GitHub の公式リリースから最新の AppImage をダウンロードして /usr/local/bin/nvim として配置する
+#
+# 配置先の方針:
+#   - /usr/local/bin/nvim         : 実行可能ファイル (AppImage本体)
+#   - 一時ファイル                : /tmp 配下にDLしてから移動
+#
+# 依存:
+#   - libfuse2 : AppImage 実行に必要 (apt で導入)
+#   - curl     : ダウンロード用 (Phase 1 で導入済み)
+#
+# Maintenance note:
+#   - Neovim の AppImage URL は GitHub Releases API から動的取得
+#     https://api.github.com/repos/neovim/neovim/releases/latest
+#   - リリース構成が変わった場合は ASSET_NAME の判定ロジックを更新すること
+#   - 更新する場合: sudo rm /usr/local/bin/nvim してから再実行
+#
+install_neovim_appimage() {
+  if has nvim; then
+    # 既に nvim がある場合、バージョン確認だけ実施
+    local current_version
+    current_version="$(nvim --version 2>/dev/null | head -1 | awk '{print $2}')"
+    ok "neovim: already installed (${current_version})"
+    return 0
+  fi
+
+  if ! has curl; then
+    warn "curl not found. Skipping neovim installation."
+    return 1
+  fi
+
+  log "Installing neovim AppImage from official GitHub release..."
+
+  # AppImage 実行に必要な libfuse2 を先に導入
+  # Ubuntu 22.04+ では libfuse2t64 に名前が変わっている可能性があるため両対応
+  log "Installing AppImage dependencies (libfuse2)..."
+  if apt-cache show libfuse2 >/dev/null 2>&1; then
+    install_pkg libfuse2
+  elif apt-cache show libfuse2t64 >/dev/null 2>&1; then
+    install_pkg libfuse2t64
+  else
+    warn "Neither libfuse2 nor libfuse2t64 available. AppImage may fail to run."
+  fi
+
+  # GitHub API から最新リリースの AppImage URL を取得
+  # Neovim 0.10.x 以降は nvim-linux-x86_64.appimage 命名規則
+  # それ以前は nvim.appimage (アーキテクチャ非明示)
+  local api_url="https://api.github.com/repos/neovim/neovim/releases/latest"
+  local appimage_url=""
+
+  log "Fetching latest Neovim release info from GitHub API..."
+
+  # GitHub API レスポンスから AppImage の URL を抽出
+  appimage_url="$(curl -sL "$api_url" | grep -oE 'https://[^"]*nvim(-linux-x86_64)?\.appimage' | head -1)"
+
+  if [[ -z "$appimage_url" ]]; then
+    warn "Could not determine AppImage URL from GitHub API"
+    warn "Falling back to direct stable URL..."
+    appimage_url="https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage"
+  fi
+
+  log "Downloading AppImage from: $appimage_url"
+
+  # 一時ファイルにダウンロード
+  local tmp_appimage="/tmp/nvim.appimage.$$"
+
+  if ! run curl -fL --progress-bar -o "$tmp_appimage" "$appimage_url"; then
+    warn "AppImage download failed, but continuing..."
+    rm -f "$tmp_appimage"
+    return 1
+  fi
+
+  # 実行権限を付与
+  run chmod +x "$tmp_appimage"
+
+  # /usr/local/bin に配置 (sudo 必要)
+  # AppImage はそのまま実行可能ファイルとして配置できる
+  log "Installing to /usr/local/bin/nvim (requires sudo)..."
+  if ! run sudo mv "$tmp_appimage" /usr/local/bin/nvim; then
+    warn "Failed to install AppImage to /usr/local/bin/nvim"
+    rm -f "$tmp_appimage"
+    return 1
+  fi
+
+  # インストール確認
+  if has nvim; then
+    local installed_version
+    installed_version="$(nvim --version 2>/dev/null | head -1 | awk '{print $2}')"
+    ok "neovim installed: ${installed_version}"
+  else
+    warn "neovim was installed but command not found in PATH"
+    return 1
+  fi
+}
+
+# ============================================================================
 # Main bootstrap flow
 # ============================================================================
 #
@@ -617,10 +716,12 @@ main() {
         fi
       fi
 
-      # neovim: ubuntu/debian の apt 版は古い場合あり (要バージョン確認)
       if [[ "$INSTALL_NEOVIM" == true ]]; then
         # Debian: tree-sitter-cli は npm 経由で導入 (Phase 6相当)
-        install_pkg neovim nodejs npm
+        install_pkg nodejs npm
+        # neovim 本体は公式 AppImage を /usr/local/bin に配置
+        # (apt の neovim は古い場合が多いため使用しない)
+        install_neovim_appimage
       fi
       # starship, sheldon, uv は apt にないため Phase 6 で導入
       ;;
@@ -662,11 +763,12 @@ main() {
 
   # 必須コマンドリスト
   # Note: パッケージ名とコマンド名が異なるツールに注意
+  #   - bat (package) → bat or batcat (command, distroで異なる)
   #   - ripgrep (package) → rg (command), 全ディストロ共通
   #   - fd-find (package, Fedora/Debian) → fd or fdfind (command, distroで異なる)
   local required=(
-    zsh git curl              # base
-    sheldon uv                # zsh plugin / Python
+    zsh git curl          # base
+    sheldon uv            # zsh plugin / Python
     rg eza fzf zoxide     # modern CLI (ripgrep のコマンド名は rg)
   )
 
