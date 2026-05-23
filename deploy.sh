@@ -276,9 +276,13 @@ setup_nvim_python_env() {
 
   log "Checking Neovim Python environment..."
 
-  # 依存コマンドの確認 (3つすべて必要)
-  if ! has_command nvim || ! has_command python || ! has_command uv; then
-    warn "nvim, python, or uv is not installed. Skipping Python env setup."
+  # 依存コマンドの確認 (python, uv, neovim すべて必要)
+  if ! has_command nvim || ! has_command uv; then
+    warn "nvim or uv is not installed. Skipping Python env setup."
+    return 0
+  fi
+  if ! has_command python && ! has_command python3; then
+    warn "python (or python3) is not installed. Skipping Python env setup."
     return 0
   fi
 
