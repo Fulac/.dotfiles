@@ -78,6 +78,11 @@ if [[ -d "${HOME}/.deno" ]]; then
   export PATH="${HOME}/.deno/bin:${PATH}"
 fi
 
+# User local binaries
+if [[ -d "${HOME}/.local/bin" ]]; then
+  export PATH="${HOME}/.local/bin:${PATH}"
+fi
+
 # CUDA
 if [[ -d "/opt/cuda" ]]; then
   export PATH="/opt/cuda/bin:${PATH}"
