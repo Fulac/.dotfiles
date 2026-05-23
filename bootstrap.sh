@@ -215,10 +215,10 @@ echo
 # ディストロ別の挙動:
 #   - Arch  : paru があれば優先、なければ pacman + sudo
 #   - Fedora: dnf install
-#   - Debian: apt-get install (事前に apt-get update)
+#   - Debian: apt install (事前に apt update)
 #
 # Maintenance note:
-#   apt-get update は時間がかかるため、Phase 2 (build tools導入時) で1回だけ実行する設計にしている。
+#   apt update は時間がかかるため、Phase 2 (build tools導入時) で1回だけ実行する設計にしている。
 #   新規 install_pkg 呼び出し前に最新情報が必要な場合は明示的に update を追加すること。
 #
 install_pkg() {
@@ -293,7 +293,7 @@ install_pkg() {
 
       log "Installing: ${to_install[*]}"
       # -y: 確認プロンプトを抑制
-      run sudo apt-get install -y "${to_install[@]}" || {
+      run sudo apt install -y "${to_install[@]}" || {
         warn "Some packages failed to install via apt, but continuing..."
       }
       ;;
@@ -494,7 +494,7 @@ main() {
   # Phase 2: Build tools
   # ----------------------------------------------------------------
   # 一部のツール (cargo, npm, etc.) はビルドに gcc/make を必要とする
-  # apt-get update もここで実行 (Debian系のキャッシュ更新)
+  # apt update もここで実行 (Debian系のキャッシュ更新)
   log "Phase 2/6: Build tools"
   case "$DISTRO_FAMILY" in
     arch)
@@ -507,9 +507,9 @@ main() {
       install_pkg gcc make
       ;;
     debian)
-      # apt-get update を 1回だけ実行
+      # apt update を 1回だけ実行
       # 失敗してもパッケージ情報のキャッシュが古いだけで実害は少ない
-      run sudo apt-get update -qq || warn "apt update failed, continuing..."
+      run sudo apt update -qq || warn "apt update failed, continuing..."
       install_pkg build-essential
       ;;
   esac
@@ -667,17 +667,17 @@ main() {
   local required=(
     zsh git curl              # base
     sheldon uv                # zsh plugin / Python
-    bat rg eza fzf zoxide     # modern CLI (ripgrep のコマンド名は rg)
+    rg eza fzf zoxide     # modern CLI (ripgrep のコマンド名は rg)
   )
 
-  # fd は Debian でのみコマンド名が fdfind
+  # fd, bat は Debian でのみコマンド名が fdfind, batcat
   # 他のディストロでは fd というコマンド名
   case "$DISTRO_FAMILY" in
     arch|fedora)
-      required+=(fd)
+      required+=(fd bat)
       ;;
     debian)
-      required+=(fdfind)
+      required+=(fdfind batcat)
       ;;
   esac
 
