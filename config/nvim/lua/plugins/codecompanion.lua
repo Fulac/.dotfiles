@@ -120,7 +120,7 @@ return {
           return require("codecompanion.adapters").extend("ollama", {
             name = "ollama_main",
             schema = {
-              model = { default = "qwen2.5-coder:32b" },
+              model = { default = "qwen36-coder" },
               num_ctx = { default = 32768 },    -- コンテキスト長
               num_predict = { default = -1 },   -- 生成トークン上限
               temperature = { default = 0.2 },  -- 温度
