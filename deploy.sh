@@ -17,10 +17,10 @@
 #
 # Target files:
 #   - zsh設定         → ~/.zshrc                          (シンボリックリンク)
-#   - Neovim設定      → ~/.config/nvim                    (ディレクトリリンク)
-#   - Vim設定         → ~/.vim                            (ディレクトリリンク)
-#   - Alacritty設定   → ~/.config/alacritty/alacritty.toml (client のみ)
 #   - sheldon設定     → ~/.config/sheldon                 (ディレクトリリンク)
+#   - Vim設定         → ~/.vim                            (ディレクトリリンク)
+#   - Neovim設定      → ~/.config/nvim                    (ディレクトリリンク)
+#   - Alacritty設定   → ~/.config/alacritty/alacritty.toml (client のみ)
 #
 # Side effects:
 #   - Neovim Python仮想環境 (~/.local/share/nvim/venv) の構築
@@ -111,13 +111,13 @@ DEPLOYMENT_MODE="${1:-client}"
 #   ~/.dotfiles/
 #   └── config/
 #       ├── zsh/        (zshrc, sheldon/, starship.toml, etc.)
-#       ├── nvim/       (init.lua, lua/, after/)
 #       ├── vim/        (vimrc, colors/)
+#       ├── nvim/       (init.lua, lua/, after/)
 #       └── alacritty/  (alacritty.toml)
 #
 DOTFILES_ZSH="${DOTFILES_DIR}/config/zsh"
-DOTFILES_NVIM="${DOTFILES_DIR}/config/nvim"
 DOTFILES_VIM="${DOTFILES_DIR}/config/vim"
+DOTFILES_NVIM="${DOTFILES_DIR}/config/nvim"
 DOTFILES_ALACRITTY="${DOTFILES_DIR}/config/alacritty"
 
 # ============================================================================
@@ -340,11 +340,11 @@ setup_nvim_python_env() {
 #
 # Deploy targets:
 #   1. zsh設定         → ~/.zshrc
-#   2. Neovim設定      → ~/.config/nvim
-#   3. Neovim Python venv構築
-#   4. Vim設定         → ~/.vim
-#   5. Alacritty設定   → ~/.config/alacritty/alacritty.toml
-#   6. sheldon設定     → ~/.config/sheldon (存在する場合のみ)
+#   2. sheldon設定     → ~/.config/sheldon (存在する場合のみ)
+#   3. Vim設定         → ~/.vim
+#   4. Neovim設定      → ~/.config/nvim
+#   5. Neovim Python venv構築
+#   6. Alacritty設定   → ~/.config/alacritty/alacritty.toml
 #
 # Maintenance note:
 #   - 新しい GUI ツールを追加する場合はここに deploy_link を追加
@@ -357,25 +357,25 @@ deploy_client() {
   # zshrc は HOME 直下に配置 (zsh 起動時に自動読み込み)
   deploy_link "${DOTFILES_ZSH}/zshrc" "${HOME}/.zshrc" "zshrc"
 
+  # sheldon (プラグインマネージャ設定)
+  # 配置場所が dotfiles 構成によって異なる場合があるため、存在チェック付き
+  if [[ -d "${DOTFILES_ZSH}/sheldon" ]]; then
+    deploy_link "${DOTFILES_ZSH}/sheldon" "${CONFIG_DIR}/sheldon" "sheldon config"
+  fi
+
+  # Vim
+  # Vim は XDG 非準拠で ~/.vim を見るため、ここに配置
+  deploy_link "${DOTFILES_VIM}" "${HOME}/.vim" "Vim config"
+
   # Neovim (client では必須)
   # ディレクトリ全体を symlink でリンク (init.lua, lua/, after/ など)
   deploy_link "${DOTFILES_NVIM}" "${CONFIG_DIR}/nvim" "Neovim config"
   # Neovim 用の Python 仮想環境を構築
   setup_nvim_python_env
 
-  # Vim
-  # Vim は XDG 非準拠で ~/.vim を見るため、ここに配置
-  deploy_link "${DOTFILES_VIM}" "${HOME}/.vim" "Vim config"
-
   # Alacritty (client のみ、headless では不要)
   # ファイル単位の symlink (TOML ファイル1つだけ)
   deploy_link "${DOTFILES_ALACRITTY}/alacritty.toml" "${CONFIG_DIR}/alacritty/alacritty.toml" "Alacritty config"
-
-  # sheldon (プラグインマネージャ設定)
-  # 配置場所が dotfiles 構成によって異なる場合があるため、存在チェック付き
-  if [[ -d "${DOTFILES_ZSH}/sheldon" ]]; then
-    deploy_link "${DOTFILES_ZSH}/sheldon" "${CONFIG_DIR}/sheldon" "sheldon config"
-  fi
 
   ok "Client deployment complete"
 }
@@ -390,18 +390,23 @@ deploy_client() {
 #   - Alacritty は不要
 #
 # client モードとの差異:
-#   - Alacritty 設定はスキップ
 #   - Neovim はインストールされている場合のみデプロイ
+#   - Alacritty 設定はスキップ
 #
 # Maintenance note:
 #   - サーバー専用の設定 (例: tmux) を追加する場合はここに追記
-#   - 共通設定 (zsh, vim, sheldon) は client/server 両方で必須
+#   - 共通設定 (zsh, sheldon, vim) は client/server 両方で必須
 #
 deploy_server() {
   log "Starting deployment [SERVER MODE]..."
 
   # zsh
   deploy_link "${DOTFILES_ZSH}/zshrc" "${HOME}/.zshrc" "zshrc"
+
+  # sheldon (プラグインマネージャ設定)
+  if [[ -d "${DOTFILES_ZSH}/sheldon" ]]; then
+    deploy_link "${DOTFILES_ZSH}/sheldon" "${CONFIG_DIR}/sheldon" "sheldon config"
+  fi
 
   # Vim
   deploy_link "${DOTFILES_VIM}" "${HOME}/.vim" "Vim config"
@@ -412,11 +417,6 @@ deploy_server() {
     setup_nvim_python_env
   else
     log "Neovim not installed. Skipping Neovim configuration."
-  fi
-
-  # sheldon (プラグインマネージャ設定)
-  if [[ -d "${DOTFILES_ZSH}/sheldon" ]]; then
-    deploy_link "${DOTFILES_ZSH}/sheldon" "${CONFIG_DIR}/sheldon" "sheldon config"
   fi
 
   ok "Server deployment complete"
