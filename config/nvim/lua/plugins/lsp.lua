@@ -138,12 +138,6 @@ return {
       -- vim.lsp.config('*', ...) で「全サーバー共通」の設定をブロードキャスト
       vim.lsp.config("*", {
         capabilities = capabilities,
-        -- on_attach でも codecompanion バッファを弾く
-        -- on_attach = function(client, bufnr)
-        --   if vim.bo[bufnr].filetype == "codecompanion" then
-        --     vim.lsp.buf_detach_client(bufnr, client.id)
-        --   end
-        -- end,
       })
 
       -- ----------------------------------------------------------
