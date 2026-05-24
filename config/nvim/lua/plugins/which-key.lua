@@ -21,8 +21,8 @@ return {
       { "<leader>x", group = "Diagnostics" },
       { "<leader>m", group = "Markdown" },
       { "<leader>b", group = "Buffer" },
-      -- AI を追加するならここに
-      -- { "<leader>a", group = "AI (CodeCompanion)" },
+      { "<leader>a", group = "AI (CodeCompanion)" },
+      { "<leader>aq", group = "AI Quick Prompts" },
     },
   },
   keys = {
