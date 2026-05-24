@@ -8,9 +8,8 @@ inoremap jf <Esc>
 nnoremap <Esc><Esc> :nohlsearch<CR><Esc>
 
 " 押しづらいキーを置き換える
-nnoremap <Space>h ^
-nnoremap <Space>l $
-nnoremap <Space>j %
+nnoremap H ^
+nnoremap L $
 
 " 単語補完を一覧の逆順にカーソルを動かして行う
 inoremap <C-f> <C-p>
@@ -31,7 +30,6 @@ let mapleader = "\<Space>"
 " <LocalLeader> を <Space> に割り当てる
 let maplocalleader = "\<Space>"
 
-
 "---------------------------------------------
 " ファイル処理関連の設定
 "---------------------------------------------
@@ -49,7 +47,6 @@ set nobackup
 
 " ファイル編集中にスワップファイルを作らない
 set noswapfile
-
 
 "---------------------------------------------
 " 検索/置換の設定
@@ -69,7 +66,6 @@ set smartcase
 " 最後尾まで検索を終えたら次の検索で先頭に移る
 set wrapscan
 
-
 "---------------------------------------------
 " タブ/インデントの設定
 "---------------------------------------------
@@ -88,16 +84,16 @@ set softtabstop=2
 " 改行時に前の行のインデントを継承する
 set autoindent
 
-
 "---------------------------------------------
 " 動作環境との統合関連の設定
 "---------------------------------------------
 " マウスの入力を受け付ける
 set mouse=a
 
-" Windows でもパスの入力を / にする
-set shellslash
-
+" Windows パスの入力を / にする
+if has('win32') || has('win64')
+  set shellslash
+endif
 
 "---------------------------------------------
 " ビープの設定
@@ -107,7 +103,6 @@ set visualbell t_vb=
 
 " エラーメッセージの表示時にビープを鳴らさない
 set noerrorbells
-
 
 "---------------------------------------------
 " 文字コードの自動認識
@@ -174,28 +169,9 @@ set fileformats=unix,dos,mac
 " 新規のファイルにはutf-8を適用する
 set fileencoding=utf-8
 
-
 "---------------------------------------------
 " vimの色関係
 "---------------------------------------------
-syntax on
-
-" ターミナルタイプによるカラー設定
-if &term =~ "xterm-256color" || "screen-256color"
-  " 256色
-  set t_Co=256
-  set t_Sf=[3%dm
-  set t_Sb=[4%dm
-elseif &term =~ "xterm-debian" || &term =~ "xterm-xfree86"
-  set t_Co=16
-  set t_Sf=[3%dm
-  set t_Sb=[4%dm
-elseif &term =~ "xterm-color"
-  set t_Co=8
-  set t_Sf=[3%dm
-  set t_Sb=[4%dm
-endif
-
 " ハイライト on
 syntax enable
 
@@ -206,39 +182,88 @@ hi PmenuSel cterm=reverse ctermfg=33 ctermbg=222 gui=reverse guifg=#3399ff guibg
 hi MatchParen term=standout ctermbg=DarkGrey ctermfg=White
 
 " カラースキーム
-colorscheme tender
+colorscheme kanagawa
 
+augroup MyColorOverride
+  autocmd!
+  autocmd ColorScheme * call s:ApplyColorOverrides()
+augroup END
+
+function! s:ApplyColorOverrides() abort
+  hi Normal         guibg=NONE ctermbg=NONE
+  hi FoldColumn     guibg=NONE ctermbg=NONE
+  hi Folded         guibg=NONE ctermbg=NONE
+  hi SignColumn     guibg=NONE ctermbg=NONE
+  hi TabLineFill    guibg=NONE ctermbg=NONE
+  hi TabLine        guibg=NONE ctermbg=NONE
+  hi LineNr         guifg=#504945 guibg=NONE ctermfg=239 ctermbg=NONE
+  hi CursorLineNr   gui=bold term=bold cterm=bold guifg=#ffad5c guibg=NONE ctermfg=215 ctermbg=NONE
+  hi CursorLine     guibg=NONE ctermbg=NONE
+  hi StatusLine     gui=NONE guifg=#eeeeee guibg=#3a3a3a cterm=NONE ctermfg=255 ctermbg=237
+  hi StatusLineNC   gui=NONE guifg=#888888 guibg=#2a2a2a cterm=NONE ctermfg=102 ctermbg=235
+endfunction
+
+" 初回読み込み時にも適用
+call s:ApplyColorOverrides()
 
 "---------------------------------------------
-" vimのstatus line設定
+" ステータスライン設定
 "---------------------------------------------
-" ファイル名表示
-set statusline=%F
-
-" 変更チェック表示
-set statusline+=%m
-
-" 読み込み専用かどうか表示
-set statusline+=%r
-
-" ヘルプページなら[HELP]と表示
-set statusline+=%h
-
-" プレビューウインドウなら[Prevew]と表示
-set statusline+=%w
-
-" これ以降は右寄せ表示
-set statusline+=%=
-
-" file encoding
-set statusline+=[ENC=%{&fileencoding}]
-
-" 現在行数/全行数
-set statusline+=[LOW=%l/%L]
-
-" ステータスラインを常に表示(0:表示しない、1:2つ以上ウィンドウがある時だけ表示)
 set laststatus=2
 
+" モード名の定義
+let g:mode_map = {
+  \ 'n':  'NORMAL',
+  \ 'i':  'INSERT',
+  \ 'v':  'VISUAL',
+  \ 'V':  'V-LINE',
+  \ 'R':  'REPLACE',
+  \ 'c':  'COMMAND',
+  \ 's':  'SELECT',
+  \ 'S':  'S-LINE',
+  \ 't':  'TERMINAL',
+  \ }
+" V-BLOCKのキー（ASCII 22）を動的に追加
+let g:mode_map[nr2char(22)] = 'V-BLOCK'
+
+function! CurrentMode() abort
+  let l:mode = mode()
+  return get(g:mode_map, l:mode, '?' . l:mode . '?')
+endfunction
+
+" ファイル名（フルパスではなくファイル名のみ、未保存なら[No Name]）
+function! FileName() abort
+  let l:name = expand('%:t')
+  return empty(l:name) ? '[No Name]' : l:name
+endfunction
+
+" エンコーディング（空の場合はencoding設定を表示）
+function! FileEncoding() abort
+  return empty(&fileencoding) ? &encoding : &fileencoding
+endfunction
+
+" 改行コード
+function! FileFormat() abort
+  let l:ff_map = {'unix': 'LF', 'dos': 'CRLF', 'mac': 'CR'}
+  return get(l:ff_map, &fileformat, &fileformat)
+endfunction
+
+" ステータスライン本体
+" ---[ 左側 ]---
+set statusline=
+set statusline+=\ %{CurrentMode()}\ \|    " モード
+set statusline+=\ %{FileName()}           " ファイル名
+set statusline+=%m                        " 変更フラグ [+]
+set statusline+=%r                        " 読み取り専用 [RO]
+set statusline+=%h                        " ヘルプ [Help]
+set statusline+=%w                        " プレビュー [Preview]
+" ---[ 右側 ]---
+set statusline+=%=                        " 右寄せ開始
+set statusline+=\ %{FileFormat()}         " 改行コード
+set statusline+=\ \|\ %{FileEncoding()}   " エンコーディング
+set statusline+=\ \|\ %{&filetype}        " ファイルタイプ
+set statusline+=\ \|\ %p%%\               " 全体に対する位置(%)
+set statusline+=\ \|\ %l\:%c              " 行:列
 
 "---------------------------------------------
 " 画面表示の設定
@@ -246,8 +271,8 @@ set laststatus=2
 " 行番号を表示する
 set number
 
-" ステータス行を常に表示
-set laststatus=2
+" カーソル行ハイライトを有効化
+set cursorline
 
 " メッセージ表示欄を２行確保
 set cmdheight=2
@@ -267,7 +292,6 @@ set list
 " 不可視文字の表示記号設定
 set listchars=extends:',precedes:'
 
-
 "---------------------------------------------
 " カーソル移動関連の設定
 "---------------------------------------------
@@ -286,16 +310,13 @@ set sidescrolloff=16
 " 左右スクロールは１文字づつ行う
 set sidescroll=1
 
-
 "---------------------------------------------
 " カーソルの外観設定
 "---------------------------------------------
 " モード毎にカーソルの形を変える
-if has('vim_starting')
-    " 挿入モード時に非点滅の縦棒タイプのカーソル
-    let &t_SI .= "\e[6 q"
-    " ノーマルモード時に非点滅のブロックタイプのカーソル
-    let &t_EI .= "\e[2 q"
-    " 置換モード時に非点滅の下線タイプのカーソル
-    let &t_SR .= "\e[4 q"
-endif
+" 挿入モード時に非点滅の縦棒タイプのカーソル
+let &t_SI = "\e[6 q"
+" ノーマルモード時に非点滅のブロックタイプのカーソル
+let &t_EI = "\e[2 q"
+" 置換モード時に非点滅の下線タイプのカーソル
+let &t_SR = "\e[4 q"
