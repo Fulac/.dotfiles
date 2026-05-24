@@ -1,2 +1,3 @@
 config/nvim/lazy-lock.json
 config/vim/.netrwhist
+config/zsh/.zshrc.local
