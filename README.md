@@ -2,7 +2,7 @@
 
 ```bash
 # 1. リポジトリをクローン
-git clone https://github.com/yourname/dotfiles ~/.dotfiles
+git https://github.com/Fulac/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
 # 2. 必要なツールをインストール (ディストロ自動検出)
