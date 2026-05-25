@@ -1,4 +1,11 @@
 # --------------------------------------------
+# Variables
+# --------------------------------------------
+# .dotfiles が置かれている絶対パスを取得
+# zshrc の実ファイルが .dotfiles/config/zsh/zshrc に置かれていることを前提とする
+DOTFILES_DIR="${"$(readlink -f "${HOME}/.zshrc")":h:h:h}"
+
+# --------------------------------------------
 # General Settings
 # --------------------------------------------
 # 文字コードをUTF-8に設定
@@ -311,9 +318,9 @@ fi
 # --------------------------------------------
 # Starship
 if type starship >/dev/null 2>&1; then
-  export STARSHIP_CONFIG="${HOME}/.dotfiles/config/zsh/starship.toml"
+  export STARSHIP_CONFIG="${DOTFILES_DIR}/config/zsh/starship.toml"
   eval "$(starship init zsh)"
 else
   # マニュアル (NerdFontが使えない環境で利用)
-  source "${HOME}/.dotfiles/config/zsh/prompt.rc.zsh"
+  source "${DOTFILES_DIR}/config/zsh/prompt.rc.zsh"
 fi
