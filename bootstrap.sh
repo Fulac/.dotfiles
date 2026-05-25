@@ -498,15 +498,19 @@ install_neovim_appimage() {
 
   log "Installing neovim AppImage from official GitHub release..."
 
-  # AppImage 実行に必要な libfuse2 を先に導入
-  # Ubuntu 22.04+ では libfuse2t64 に名前が変わっている可能性があるため両対応
-  log "Installing AppImage dependencies (libfuse2)..."
-  if apt-cache show libfuse2 >/dev/null 2>&1; then
-    install_pkg libfuse2
-  elif apt-cache show libfuse2t64 >/dev/null 2>&1; then
-    install_pkg libfuse2t64
+  # AppImage 実行に必要な libfuse2 を導入
+  # Ubuntu 24.04+, Debian 13+ では libfuse2 → libfuse2t64 に名前変更
+  log "Installing AppImage dependency (libfuse2 or libfuse2t64)..."
+  # libfuse2t64 を先に試行 (新しいディストロ向け、Debian 13 trixie 含む)
+  # install_pkg は失敗時も warn して 0 を返す設計のため、
+  # インストール後に dpkg -s で実際のインストール状態を確認する
+  install_pkg libfuse2t64
+  install_pkg libfuse2
+  if dpkg -s libfuse2t64 >/dev/null 2>&1 || dpkg -s libfuse2 >/dev/null 2>&1; then
+    ok "libfuse2 dependency ensured"
   else
-    warn "Neither libfuse2 nor libfuse2t64 available. AppImage may fail to run."
+    warn "Failed to install libfuse2/libfuse2t64. AppImage may fail to run."
+    warn "You may need: sudo apt install libfuse2t64"
   fi
 
   # GitHub API から最新リリースの AppImage URL を取得
@@ -709,24 +713,15 @@ main() {
 
       # alacritty: Ubuntu 22.04+ で提供 (Debian は不安定)
       if [[ "$INSTALL_ALACRITTY" == true ]]; then
-        if apt-cache show alacritty >/dev/null 2>&1; then
-          install_pkg alacritty
-        else
-          warn "alacritty not in apt repo; install manually on this distro"
-        fi
+        install_pkg alacritty || warn "alacritty not available in apt; skipping"
       fi
 
       if [[ "$INSTALL_NEOVIM" == true ]]; then
         # Debian: tree-sitter-cli は npm 経由で導入 (Phase 6相当)
         install_pkg nodejs npm
-        # neovim 本体は公式 AppImage を /usr/local/bin に配置
-        # (apt の neovim は古い場合が多いため使用しない)
-        install_neovim_appimage
       fi
-      # starship, sheldon, uv は apt にないため Phase 6 で導入
       ;;
   esac
-  echo
 
   # ----------------------------------------------------------------
   # Phase 6: Official script installers (fallback)
@@ -744,6 +739,12 @@ main() {
   # オプションツール (フラグに応じて)
   if [[ "$INSTALL_STARSHIP" == true ]]; then
     install_starship_script
+  fi
+
+  # neovim: Debian 系のみ AppImage で最新版を導入
+  # Arch/Fedora は Phase 5 でパッケージマネージャから導入済み
+  if [[ "$INSTALL_NEOVIM" == true ]] && [[ "$DISTRO_FAMILY" == "debian" ]]; then
+    install_neovim_appimage
   fi
 
   # neovim を入れる場合のみ tree-sitter-cli を npm 経由で導入
