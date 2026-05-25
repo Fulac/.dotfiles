@@ -651,9 +651,13 @@ main() {
       # Arch では python が 3系のデフォルト
       install_pkg python
       ;;
-    fedora|debian)
-      # Fedora/Debian では python3 を明示的に指定
+    fedora)
+      # Fedora では python3 を明示的に指定
       install_pkg python3
+      ;;
+    debian)
+      # Debian では python3-full で venv, pip 必要な機能を含めて全てインストールする
+      install_pkg python3-full
       ;;
   esac
   echo
