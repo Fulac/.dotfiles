@@ -704,13 +704,6 @@ main() {
 
     debian)
       # Debian は apt 提供のものを優先
-      # apt-cache show でリポジトリ提供状況を確認してから install_pkg を呼ぶ
-
-      # zoxide: Ubuntu 22.10+, Debian 12+ で提供
-      if apt-cache show zoxide >/dev/null 2>&1; then
-        install_pkg zoxide
-      fi
-
       # alacritty: Ubuntu 22.04+ で提供 (Debian は不安定)
       if [[ "$INSTALL_ALACRITTY" == true ]]; then
         install_pkg alacritty || warn "alacritty not available in apt; skipping"
@@ -732,25 +725,25 @@ main() {
   export PATH="${HOME}/.local/bin:${HOME}/.cargo/bin:${PATH}"
 
   # 必須ツール (全環境で必要)
-  install_sheldon_script
-  install_uv_script
-  install_zoxide_script
+  install_sheldon_script || true
+  install_uv_script || true
+  install_zoxide_script || true
 
   # オプションツール (フラグに応じて)
   if [[ "$INSTALL_STARSHIP" == true ]]; then
-    install_starship_script
+    install_starship_script || true
   fi
 
   # neovim: Debian 系のみ AppImage で最新版を導入
   # Arch/Fedora は Phase 5 でパッケージマネージャから導入済み
   if [[ "$INSTALL_NEOVIM" == true ]] && [[ "$DISTRO_FAMILY" == "debian" ]]; then
-    install_neovim_appimage
+    install_neovim_appimage || true
   fi
 
   # neovim を入れる場合のみ tree-sitter-cli を npm 経由で導入
   # Arch は Phase 5 で tree-sitter パッケージを導入済みなのでスキップ
   if [[ "$INSTALL_NEOVIM" == true ]] && [[ "$DISTRO_FAMILY" != "arch" ]]; then
-    install_tree_sitter_cli
+    install_tree_sitter_cli || true
   fi
   echo
 
