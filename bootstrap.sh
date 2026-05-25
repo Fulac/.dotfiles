@@ -498,19 +498,15 @@ install_neovim_appimage() {
 
   log "Installing neovim AppImage from official GitHub release..."
 
-  # AppImage 実行に必要な libfuse2 を導入
-  # Ubuntu 24.04+, Debian 13+ では libfuse2 → libfuse2t64 に名前変更
-  log "Installing AppImage dependency (libfuse2 or libfuse2t64)..."
-  # libfuse2t64 を先に試行 (新しいディストロ向け、Debian 13 trixie 含む)
-  # install_pkg は失敗時も warn して 0 を返す設計のため、
-  # インストール後に dpkg -s で実際のインストール状態を確認する
-  install_pkg libfuse2t64
-  install_pkg libfuse2
-  if dpkg -s libfuse2t64 >/dev/null 2>&1 || dpkg -s libfuse2 >/dev/null 2>&1; then
-    ok "libfuse2 dependency ensured"
+  # Debian 13 (trixie) 以降は libfuse2 が廃止方向のため fuse3 に統一
+  # fuse3 パッケージが fusermount3 を提供し、AppImage (0.10.0+) が利用する
+  log "Installing AppImage dependency (fuse3)..."
+  install_pkg fuse3
+  if dpkg -s fuse3 >/dev/null 2>&1; then
+    ok "fuse3 ensured"
   else
-    warn "Failed to install libfuse2/libfuse2t64. AppImage may fail to run."
-    warn "You may need: sudo apt install libfuse2t64"
+    warn "Failed to install fuse3. AppImage may fail to run."
+    warn "You may need: sudo apt install fuse3"
   fi
 
   # GitHub API から最新リリースの AppImage URL を取得
