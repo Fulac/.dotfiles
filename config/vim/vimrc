@@ -199,7 +199,7 @@ function! s:ApplyColorOverrides() abort
   hi LineNr         guifg=#504945 guibg=NONE ctermfg=239 ctermbg=NONE
   hi CursorLineNr   gui=bold term=bold cterm=bold guifg=#ffad5c guibg=NONE ctermfg=215 ctermbg=NONE
   hi CursorLine     guibg=NONE ctermbg=NONE
-  hi StatusLine     gui=NONE guifg=#eeeeee guibg=#3a3a3a cterm=NONE ctermfg=255 ctermbg=237
+  hi StatusLine     gui=NONE guifg=#b3ccff guibg=#242433 cterm=NONE ctermfg=255 ctermbg=237
   hi StatusLineNC   gui=NONE guifg=#888888 guibg=#2a2a2a cterm=NONE ctermfg=102 ctermbg=235
 endfunction
 
