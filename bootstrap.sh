@@ -692,7 +692,7 @@ main() {
       # apt update を 1回だけ実行
       # 失敗してもパッケージ情報のキャッシュが古いだけで実害は少ない
       run sudo apt update -qq || warn "apt update failed, continuing..."
-      install_pkg build-essential rutup
+      install_pkg build-essential rustup
       ;;
   esac
   echo
