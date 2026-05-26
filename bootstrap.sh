@@ -10,9 +10,9 @@
 #   スクリプトを組み合わせて、シェル環境一式を構築する
 #
 # Supported distros:
-#   - Arch family   (cachyos, arch, manjaro, endeavouros, garuda)
+#   - Arch family   (arch, cachyos, manjaro, endeavouros, garuda)
 #   - Fedora family (fedora, rhel, rocky, almalinux)
-#   - Debian family (ubuntu, debian, linuxmint, pop)
+#   - Debian family (debian, ubuntu, linuxmint, pop)
 #
 # Default behavior:
 #   全パッケージをインストール対象とする
@@ -561,6 +561,79 @@ install_neovim_appimage() {
 }
 
 # ============================================================================
+# Rust toolchain initializer
+# ============================================================================
+#
+# 背景:
+#   各ディストロのパッケージマネージャで rustup をインストールしても
+#   ツールチェーン (rustc, cargo) はデフォルトでセットアップされないため
+#   インストール後に stable ツールチェーンの初期化が必要
+#
+# ディストロ別の挙動:
+#   - Arch/Debian : rustup コマンドが提供される → rustup default stable
+#   - Fedora      : rustup-init コマンドが提供される → rustup-init -y
+#
+# 配置先:
+#   ~/.cargo/bin (rustc, cargo, rustup 等)
+#
+# Maintenance note:
+#   - PATH への追加は zshrc 側で管理 (export PATH="$HOME/.cargo/bin:$PATH")
+#   - ツールチェーンの更新: rustup update
+#   - Fedora で rustup-init と rust パッケージを併用しないこと (競合)
+#
+setup_rust_toolchain() {
+  log "Setting up Rust toolchain..."
+
+  case "$DISTRO_FAMILY" in
+    arch|debian)
+      if ! has rustup; then
+        warn "rustup not found. Skipping Rust toolchain setup."
+        return 1
+      fi
+
+      # ツールチェーンが既にセットアップ済みか確認
+      if has rustc && has cargo; then
+        local rust_version
+        rust_version="$(rustc --version 2>/dev/null | awk '{print $2}')"
+        ok "Rust toolchain already configured (rustc ${rust_version})"
+        return 0
+      fi
+
+      # stable ツールチェーンをデフォルトに設定
+      log "Initializing Rust stable toolchain via rustup..."
+      run rustup default stable || {
+        warn "rustup default stable failed, but continuing..."
+        return 1
+      }
+      ok "Rust toolchain initialized"
+      ;;
+
+    fedora)
+      if ! has rustup-init; then
+        warn "rustup-init not found. Skipping Rust toolchain setup."
+        return 1
+      fi
+
+      # ツールチェーンが既にセットアップ済みか確認
+      if has rustc && has cargo; then
+        local rust_version
+        rust_version="$(rustc --version 2>/dev/null | awk '{print $2}')"
+        ok "Rust toolchain already configured (rustc ${rust_version})"
+        return 0
+      fi
+
+      # -y: 非対話的にデフォルト設定でインストール
+      log "Initializing Rust stable toolchain via rustup-init..."
+      run rustup-init -y || {
+        warn "rustup-init failed, but continuing..."
+        return 1
+      }
+      ok "Rust toolchain initialized"
+      ;;
+  esac
+}
+
+# ============================================================================
 # Main bootstrap flow
 # ============================================================================
 #
@@ -568,7 +641,7 @@ install_neovim_appimage() {
 # 各 phase は独立しており、途中で失敗しても可能な限り後続を実行する
 #
 # Phase 1: Base packages       (zsh, git, curl)
-# Phase 2: Build tools         (gcc, make, base-devel など)
+# Phase 2: Build tools         (gcc, make, base-devel, rustup など)
 # Phase 3: Modern CLI tools    (bat, ripgrep, fd, eza, fzf)
 # Phase 4: Python toolchain    (python3, uv は Phase 6 で導入)
 # Phase 5: Distro-specific     (sheldon, starship, alacritty, neovim, etc.)
@@ -599,17 +672,27 @@ main() {
     arch)
       # base-devel: gcc, make, binutils などをまとめて提供するメタパッケージ
       install_pkg base-devel
+
+      # rust と rustup は競合パッケージのため、rustup を優先する
+      # rust が既にインストール済みの場合は事前に削除してから rustup を導入
+      if pacman -Qi rust >/dev/null 2>&1 && ! pacman -Qi rustup >/dev/null 2>&1; then
+        warn "rust package detected. Replacing with rustup (conflict resolution)..."
+        run sudo pacman -R --noconfirm rust || {
+          warn "Failed to remove rust package, but continuing..."
+        }
+      fi
+      install_pkg rustup
       ;;
     fedora)
       # Fedora には base-devel に相当するメタパッケージがあるが、
       # dnf groupinstall は冪等性に難があるため個別指定
-      install_pkg gcc make
+      install_pkg gcc make rustup-init
       ;;
     debian)
       # apt update を 1回だけ実行
       # 失敗してもパッケージ情報のキャッシュが古いだけで実害は少ない
       run sudo apt update -qq || warn "apt update failed, continuing..."
-      install_pkg build-essential
+      install_pkg build-essential rutsup
       ;;
   esac
   echo
@@ -728,6 +811,7 @@ main() {
   install_sheldon_script || true
   install_uv_script || true
   install_zoxide_script || true
+  setup_rust_toolchain || true
 
   # オプションツール (フラグに応じて)
   if [[ "$INSTALL_STARSHIP" == true ]]; then
@@ -764,6 +848,7 @@ main() {
     zsh git curl          # base
     sheldon uv            # zsh plugin / Python
     rg eza fzf zoxide     # modern CLI (ripgrep のコマンド名は rg)
+    rustc cargo           # Rust toolchain
   )
 
   # fd, bat は Debian でのみコマンド名が fdfind, batcat
