@@ -23,11 +23,11 @@ local p_userhost=""
 
 # rootユーザ、またはSSH接続時のホスト名強調
 if [[ ${UID} -eq 0 ]]; then
-  p_userhost="%F{red}%n@%m%f"
+  p_userhost="%F{magenta}%m %F{red}%n%f"
 elif [[ -n "${SSH_TTY}" || -n "${SSH_CLIENT}" ]]; then
-  p_userhost="%F{white}%n@%m%f"
+  p_userhost="%F{magenta}%m %F{cyan}%n%f"
 else
-  p_userhost="%F{white}%n%f"
+  p_userhost="%F{cyan}%n%f"
 fi
 
 # 通常のプロンプト (ユーザー名/ホスト名 + 権限記号)
