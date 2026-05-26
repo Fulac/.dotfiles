@@ -30,18 +30,28 @@ use = ["{{ name }}.zsh"]
 apply = ["defer"]
 
 [plugins.zsh-autosuggestions.hooks]
+pre = """
+  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#767676,underline"
+  ZSH_AUTOSUGGEST_STRATEGY=(history completion)   # 補完候補も提案ソースに追加
+  ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20              # 長すぎるバッファは無視
+"""
 post = """
   bindkey '^f' autosuggest-accept
-  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#767676,underline"
 """
 
 [plugins.zsh-syntax-highlighting]
 github = "zsh-users/zsh-syntax-highlighting"
+apply = ["defer"]
 
 [plugins.zsh-syntax-highlighting.hooks]
-post = """
+pre = """
+  # 512文字を超えるコマンドラインはハイライトを無効化 (パフォーマンス対策)
+  ZSH_HIGHLIGHT_MAXLENGTH=512
+
+  # bracketed-paste-magic との競合による長文字列ペースト時の遅延を防止
+  zstyle ':bracketed-paste-magic' active-widgets '.self-*'
+
   ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
-  # Declare the variable
   typeset -A ZSH_HIGHLIGHT_STYLES
   ZSH_HIGHLIGHT_STYLES[default]='fg=111'
   ZSH_HIGHLIGHT_STYLES[arg0]='fg=118'
