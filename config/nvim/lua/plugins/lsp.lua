@@ -173,6 +173,28 @@ return {
         },
       })
 
+      vim.lsp.config("rust_analyzer", {
+        settings = {
+          ["rust-analyzer"] = {
+            -- cargo の自動チェックを有効化
+            checkOnSave = {
+              command = "clippy", -- cargo check の代わりに clippy を使用
+            },
+            -- procマクロの解析を有効化
+            procMacro = {
+              enable = true,
+            },
+            -- インレイヒントの設定
+            inlayHints = {
+              bindingModeHints = { enable = false },
+              chainingHints    = { enable = true },
+              parameterHints   = { enable = true },
+              typeHints        = { enable = true },
+            },
+          },
+        },
+      })
+
       -- Python (pyright + ruff)
       vim.lsp.config("pyright", {
         settings = {
@@ -246,6 +268,7 @@ return {
           "jsonls",
           "marksman",
           "bashls",
+          "rust_analyzer",
         },
         -- automatic_enable はデフォルト true。明示しておく
         automatic_enable = true,

@@ -9,7 +9,7 @@ return {
     -- 言語パーサーのインストール
     require("nvim-treesitter").install({
       -- 基本言語 & 共通フォーマット
-      "c", "cpp", "lua", "vim", "vimdoc", "python", "javascript", "html", "json", "yaml", "query",
+      "c", "cpp", "rust", "lua", "vim", "vimdoc", "python", "javascript", "html", "json", "yaml", "query",
       -- ドキュメント & テキストノート
       "markdown",
       "markdown_inline",
