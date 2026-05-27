@@ -19,17 +19,17 @@
 #   特定ツールを除外したい場合は --without-* オプションを指定
 #
 # Optional tools (除外可能):
-#   - alacritty : GPU高速ターミナル (headless環境では不要)
-#   - starship  : シェルプロンプト
-#   - neovim    : Lua制御のモダンエディタ
+#   - wezterm  : GPU高速ターミナル (headless環境では不要)
+#   - starship : シェルプロンプト
+#   - neovim   : Lua制御のモダンエディタ
 #     └─ neovim導入時は nodejs, npm, tree-sitter-cli も同時に導入
 #
 # Usage:
 #   ./bootstrap.sh                       # install everything (default)
-#   ./bootstrap.sh --without-alacritty   # exclude alacritty (headless/server)
+#   ./bootstrap.sh --without-wezterm     # exclude wezterm (headless/server)
 #   ./bootstrap.sh --without-starship    # exclude starship (use fallback prompt)
 #   ./bootstrap.sh --without-neovim      # exclude neovim and its deps
-#   ./bootstrap.sh --without-alacritty --without-neovim   # multiple exclusions
+#   ./bootstrap.sh --without-wezterm --without-neovim   # multiple exclusions
 #   DRY_RUN=1 ./bootstrap.sh             # show commands without executing
 #
 # Maintenance notes:
@@ -85,7 +85,7 @@ has() { command -v "$1" >/dev/null 2>&1; }
 # 各オプションツールの導入可否フラグ
 # デフォルトは true (インストールする)
 # コマンドライン引数 --without-* で個別に false に設定可能
-INSTALL_ALACRITTY=true
+INSTALL_WEZTERM=true
 INSTALL_STARSHIP=true
 INSTALL_NEOVIM=true
 
@@ -96,8 +96,8 @@ INSTALL_NEOVIM=true
 # --help で使い方表示
 while (( $# > 0 )); do
   case "$1" in
-    --without-alacritty)
-      INSTALL_ALACRITTY=false
+    --without-wezterm)
+      INSTALL_WEZTERM=false
       ;;
     --without-starship)
       INSTALL_STARSHIP=false
@@ -113,7 +113,7 @@ Usage: $0 [OPTIONS]
 By default, all packages are installed. Use options below to exclude specific tools.
 
 Options:
-  --without-alacritty   Skip alacritty installation (headless/server environments)
+  --without-wezterm     Skip wezterm installation (headless/server environments)
   --without-starship    Skip starship installation (use fallback prompt)
   --without-neovim      Skip neovim installation (also skips nodejs/npm/tree-sitter-cli)
   -h, --help            Show this help message
@@ -122,9 +122,9 @@ Environment:
   DRY_RUN=1             Show commands without executing them
 
 Examples:
-  $0                                       # install everything (default)
-  $0 --without-alacritty                   # for server/headless environments
-  $0 --without-alacritty --without-neovim  # minimal install
+  $0                                      # install everything (default)
+  $0 --without-wezterm                    # for server/headless environments
+  $0 --without-wezterm --without-neovim   # minimal install
 EOF
       exit 0
       ;;
@@ -196,7 +196,7 @@ log "Installation plan:"
 echo "  Required tools     : zsh, git, curl, sheldon, uv,"
 echo "                       bat, ripgrep, fd, eza, zoxide, fzf,"
 echo "                       python3, build tools"
-echo "  Alacritty          : $([ "$INSTALL_ALACRITTY" == true ] && echo 'yes' || echo 'no (--without-alacritty)')"
+echo "  Wezterm            : $([ "$INSTALL_WEZTERM" == true ] && echo 'yes' || echo 'no (--without-wezterm)')"
 echo "  Starship           : $([ "$INSTALL_STARSHIP" == true ] && echo 'yes' || echo 'no (--without-starship)')"
 echo "  Neovim suite       : $([ "$INSTALL_NEOVIM" == true ] && echo 'yes (with nodejs, npm, tree-sitter-cli)' || echo 'no (--without-neovim)')"
 echo
@@ -644,7 +644,7 @@ setup_rust_toolchain() {
 # Phase 2: Build tools         (gcc, make, base-devel, rustup など)
 # Phase 3: Modern CLI tools    (bat, ripgrep, fd, eza, fzf)
 # Phase 4: Python toolchain    (python3, uv は Phase 6 で導入)
-# Phase 5: Distro-specific     (sheldon, starship, alacritty, neovim, etc.)
+# Phase 5: Distro-specific     (sheldon, starship, wezterm, neovim, etc.)
 # Phase 6: Official scripts    (Phase 5 でカバーできなかったツール)
 #
 
@@ -759,8 +759,8 @@ main() {
       if [[ "$INSTALL_STARSHIP" == true ]]; then
         install_pkg starship
       fi
-      if [[ "$INSTALL_ALACRITTY" == true ]]; then
-        install_pkg alacritty
+      if [[ "$INSTALL_WEZTERM" == true ]]; then
+        install_pkg wezterm
       fi
       if [[ "$INSTALL_NEOVIM" == true ]]; then
         # neovim関連: エディタ本体 + プラグイン依存ツール
@@ -771,13 +771,22 @@ main() {
       ;;
 
     fedora)
-      # Fedora は starship/alacritty/neovim/nodejs が dnf にある
+      # Fedora は starship/neovim/nodejs が dnf にある
       # sheldon, uv, zoxide は dnf にないため Phase 6 で導入
       if [[ "$INSTALL_STARSHIP" == true ]]; then
         install_pkg starship
       fi
-      if [[ "$INSTALL_ALACRITTY" == true ]]; then
-        install_pkg alacritty
+      # wezterm: Fedora は公式 dnf リポジトリにないため Copr を使用
+      if [[ "$INSTALL_WEZTERM" == true ]]; then
+        if ! has wezterm; then
+          log "Enabling wezterm Copr repository..."
+          run sudo dnf copr enable -y wezfurlong/wezterm-nightly || {
+            warn "Failed to enable wezterm Copr. Skipping wezterm installation."
+          }
+          install_pkg wezterm
+        else
+          ok "wezterm: already installed"
+        fi
       fi
       if [[ "$INSTALL_NEOVIM" == true ]]; then
         # Fedora: tree-sitter-cli は npm 経由で導入 (Phase 6相当)
@@ -787,11 +796,24 @@ main() {
 
     debian)
       # Debian は apt 提供のものを優先
-      # alacritty: Ubuntu 22.04+ で提供 (Debian は不安定)
-      if [[ "$INSTALL_ALACRITTY" == true ]]; then
-        install_pkg alacritty || warn "alacritty not available in apt; skipping"
+      # wezterm: apt 標準リポジトリには含まれないため公式 APT リポジトリを追加
+      if [[ "$INSTALL_WEZTERM" == true ]]; then
+        if ! has wezterm; then
+          log "Adding wezterm official APT repository..."
+          run curl -fsSL https://apt.fury.io/wez/gpg.key \
+            | sudo gpg --yes --dearmor -o /usr/share/keyrings/wezterm-fury.gpg || {
+            warn "Failed to add wezterm GPG key. Skipping wezterm installation."
+          }
+          if [[ -f /usr/share/keyrings/wezterm-fury.gpg ]]; then
+            echo 'deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' \
+              | run sudo tee /etc/apt/sources.list.d/wezterm.list >/dev/null
+            run sudo apt update -qq
+            install_pkg wezterm
+          fi
+        else
+          ok "wezterm: already installed"
+        fi
       fi
-
       if [[ "$INSTALL_NEOVIM" == true ]]; then
         # Debian: tree-sitter-cli は npm 経由で導入 (Phase 6相当)
         install_pkg nodejs npm

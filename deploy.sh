@@ -11,16 +11,16 @@
 #   適切に振り分ける
 #
 # Deployment modes:
-#   - client : デスクトップ環境向け (alacritty を含む完全構成)
-#   - server : headless 環境向け (alacritty 除外、Neovim は導入済みの場合のみ)
+#   - client : デスクトップ環境向け (wezterm を含む完全構成)
+#   - server : headless 環境向け (wezterm 除外、Neovim は導入済みの場合のみ)
 #   - uninstall : 全 symlink を削除して原状回復
 #
 # Target files:
-#   - zsh設定         → ~/.zshrc                          (シンボリックリンク)
-#   - sheldon設定     → ~/.config/sheldon                 (ディレクトリリンク)
-#   - Vim設定         → ~/.vim                            (ディレクトリリンク)
-#   - Neovim設定      → ~/.config/nvim                    (ディレクトリリンク)
-#   - Alacritty設定   → ~/.config/alacritty/alacritty.toml (client のみ)
+#   - zsh設定         → ~/.zshrc           (シンボリックリンク)
+#   - sheldon設定     → ~/.config/sheldon  (ディレクトリリンク)
+#   - Vim設定         → ~/.vim             (ディレクトリリンク)
+#   - Neovim設定      → ~/.config/nvim     (ディレクトリリンク)
+#   - Wezterm設定     → ~/.config/wezterm  (ディレクトリリンク, client のみ)
 #
 # Side effects:
 #   - Neovim Python仮想環境 (~/.local/share/nvim/venv) の構築
@@ -113,12 +113,12 @@ DEPLOYMENT_MODE="${1:-client}"
 #       ├── zsh/        (zshrc, sheldon/, starship.toml, etc.)
 #       ├── vim/        (vimrc, colors/)
 #       ├── nvim/       (init.lua, lua/, after/)
-#       └── alacritty/  (alacritty.toml)
+#       └── wezterm/    (wezterm.lua)
 #
 DOTFILES_ZSH="${DOTFILES_DIR}/config/zsh"
 DOTFILES_VIM="${DOTFILES_DIR}/config/vim"
 DOTFILES_NVIM="${DOTFILES_DIR}/config/nvim"
-DOTFILES_ALACRITTY="${DOTFILES_DIR}/config/alacritty"
+DOTFILES_WEZTERM="${DOTFILES_DIR}/config/wezterm"
 
 # ============================================================================
 # Helper functions
@@ -190,7 +190,7 @@ deploy_link() {
     return 1
   fi
 
-  # 親ディレクトリを作成 (例: ~/.config/alacritty/ が無ければ作る)
+  # 親ディレクトリを作成 (例: ~/.config/wezterm/ が無ければ作る)
   local dst_parent
   dst_parent="$(dirname "$dst")"
   if [[ ! -d "$dst_parent" ]]; then
@@ -335,7 +335,7 @@ setup_nvim_python_env() {
 #
 # 対象環境:
 #   - GUI を持つデスクトップ Linux
-#   - Alacritty などの GPU ターミナルを使用
+#   - Wezterm などの GPU ターミナルを使用
 #   - Neovim をフル活用 (Python venv も構築)
 #
 # Deploy targets:
@@ -344,11 +344,11 @@ setup_nvim_python_env() {
 #   3. Vim設定         → ~/.vim
 #   4. Neovim設定      → ~/.config/nvim
 #   5. Neovim Python venv構築
-#   6. Alacritty設定   → ~/.config/alacritty/alacritty.toml
+#   6. Wezterm設定     → ~/.config/wezterm
 #
 # Maintenance note:
 #   - 新しい GUI ツールを追加する場合はここに deploy_link を追加
-#   - deploy_server とほぼ同じ処理だが、Alacritty の扱いだけが異なる
+#   - deploy_server とほぼ同じ処理だが、Wezterm の扱いだけが異なる
 #
 deploy_client() {
   log "Starting deployment [CLIENT MODE]..."
@@ -373,9 +373,9 @@ deploy_client() {
   # Neovim 用の Python 仮想環境を構築
   setup_nvim_python_env
 
-  # Alacritty (client のみ、headless では不要)
+  # Wezterm (client のみ、headless では不要)
   # ファイル単位の symlink (TOML ファイル1つだけ)
-  deploy_link "${DOTFILES_ALACRITTY}/alacritty.toml" "${CONFIG_DIR}/alacritty/alacritty.toml" "Alacritty config"
+  deploy_link "${DOTFILES_WEZTERM}" "${CONFIG_DIR}/wezterm" "Wezterm config"
 
   ok "Client deployment complete"
 }
@@ -387,11 +387,11 @@ deploy_client() {
 # 対象環境:
 #   - GUI なし (headless) の Linux サーバー
 #   - SSH 経由でアクセス
-#   - Alacritty は不要
+#   - Wezterm は不要
 #
 # client モードとの差異:
 #   - Neovim はインストールされている場合のみデプロイ
-#   - Alacritty 設定はスキップ
+#   - Wezterm 設定はスキップ
 #
 # Maintenance note:
 #   - サーバー専用の設定 (例: tmux) を追加する場合はここに追記
@@ -434,7 +434,7 @@ deploy_server() {
 #   - ~/.zshrc
 #   - ~/.config/nvim
 #   - ~/.vim
-#   - ~/.config/alacritty/alacritty.toml
+#   - ~/.config/wezterm
 #   - ~/.config/sheldon
 #
 # 削除しないもの:
@@ -451,7 +451,7 @@ uninstall_all() {
   remove_link "${HOME}/.zshrc"
   remove_link "${CONFIG_DIR}/nvim"
   remove_link "${HOME}/.vim"
-  remove_link "${CONFIG_DIR}/alacritty/alacritty.toml"
+  remove_link "${CONFIG_DIR}/wezterm"
   remove_link "${CONFIG_DIR}/sheldon"
 
   ok "Uninstall complete"
