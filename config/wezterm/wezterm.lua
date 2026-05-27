@@ -133,14 +133,14 @@ wezterm.on("format-tab-title", function(tab, tabs, panes, cfg, hover, max_width)
   ) .. "  "
 
   return {
-    { Background = { Color = "none" } },
+    { Background = { Color = "#0a0c11" } },
     { Foreground = { Color = tab_bg } },
     { Text = ARROW_LEFT },
     { Background = { Color = tab_bg } },
     { Foreground = { Color = tab_fg } },
     { Attribute = { Intensity = tab.is_active and "Bold" or "Normal" } },
     { Text = title },
-    { Background = { Color = "none" } },
+    { Background = { Color = "#0a0c11" } },
     { Foreground = { Color = tab_bg } },
     { Text = ARROW_RIGHT },
   }
