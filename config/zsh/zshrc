@@ -11,9 +11,6 @@ DOTFILES_DIR="${"$(readlink -f "${HOME}/.zshrc")":h:h:h}"
 # 文字コードをUTF-8に設定
 export LANG=ja_JP.UTF-8
 
-# キーバインドをviモードに設定
-bindkey -v
-
 # ビープ音を鳴らさないようにする
 setopt no_beep
 
