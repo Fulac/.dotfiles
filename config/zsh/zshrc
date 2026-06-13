@@ -54,6 +54,8 @@ alias cl="clear"
 alias df="df -h"
 alias du="du -h"
 
+alias lg="lazygit"
+
 # Debian系のコマンド名差異を吸収
 if type batcat >/dev/null 2>&1 && ! type bat >/dev/null 2>&1; then
   alias bat="batcat"
