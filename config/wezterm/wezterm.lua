@@ -17,7 +17,7 @@ config.adjust_window_size_when_changing_font_size = false
 -- ウィンドウ・外観設定
 -- ==========================================
 -- 背景の透過度
-config.window_background_opacity = 0.9
+config.window_background_opacity = 0.95
 
 -- 起動時のウィンドウサイズ
 config.initial_cols = 140
