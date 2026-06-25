@@ -78,13 +78,13 @@ M.keys = {
   -- ------------------------------------------
   -- タブ操作
   -- ------------------------------------------
-  -- Ctrl+Shift+T : 新規タブを開く
+  -- Ctrl+T : 新規タブを開く
   {
     key    = "t",
     mods   = "CTRL",
     action = act.SpawnTab("CurrentPaneDomain"),
   },
-  -- Ctrl+Shift+W : 現在のタブを閉じる
+  -- Ctrl+W : 現在のタブを閉じる
   {
     key    = "w",
     mods   = "CTRL",
