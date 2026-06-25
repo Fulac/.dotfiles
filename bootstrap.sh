@@ -193,7 +193,7 @@ echo
 # ============================================================================
 # 実行前にユーザーへインストール計画を提示する
 log "Installation plan:"
-echo "  Required tools     : zsh, git, curl, sheldon, uv,"
+echo "  Required tools     : zsh, git, curl, sheldon, uv, unzip"
 echo "                       bat, ripgrep, fd, eza, zoxide, fzf,"
 echo "                       python3, build tools"
 echo "  Wezterm            : $([ "$INSTALL_WEZTERM" == true ] && echo 'yes' || echo 'no (--without-wezterm)')"
@@ -640,7 +640,7 @@ setup_rust_toolchain() {
 # インストール処理を 6 phase に分けて実行
 # 各 phase は独立しており、途中で失敗しても可能な限り後続を実行する
 #
-# Phase 1: Base packages       (zsh, git, curl)
+# Phase 1: Base packages       (zsh, git, curl, unzip)
 # Phase 2: Build tools         (gcc, make, base-devel, rustup など)
 # Phase 3: Modern CLI tools    (bat, ripgrep, fd, eza, fzf)
 # Phase 4: Python toolchain    (python3, uv は Phase 6 で導入)
@@ -658,8 +658,8 @@ main() {
   # zsh: メインシェル
   # git: dotfiles リポジトリ操作
   # curl: 公式インストールスクリプトのダウンロード
-  log "Phase 1/6: Base packages (zsh, git, curl)"
-  install_pkg zsh git curl
+  log "Phase 1/6: Base packages (zsh, git, curl, unzip)"
+  install_pkg zsh git curl unzip
   echo
 
   # ----------------------------------------------------------------
@@ -867,7 +867,7 @@ main() {
   #   - ripgrep (package) → rg (command), 全ディストロ共通
   #   - fd-find (package, Fedora/Debian) → fd or fdfind (command, distroで異なる)
   local required=(
-    zsh git curl          # base
+    zsh git curl unzip    # base
     sheldon uv            # zsh plugin / Python
     rg eza fzf zoxide     # modern CLI (ripgrep のコマンド名は rg)
     rustc cargo           # Rust toolchain
