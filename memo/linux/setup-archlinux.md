@@ -1,372 +1,451 @@
-# Arch Linuxのインストール手順
+# Arch Linux インストール手順（btrfs subvolume / Snapper 構成）
+
+> 本手順書は UEFI 起動・NVMe SSD・btrfs（subvolume 分割）を前提とする。
+> デバイス名（`/dev/nvme0n1`）・ホスト名・ユーザ名は環境に合わせて読み替えること。
+
+## 前提・ターゲット構成
+
+### パーティション
+
+| パーティション | サイズ | フォーマット | マウントポイント |
+|----------------|--------|--------------|------------------|
+| /dev/nvme0n1p1 | 1G     | FAT32 (ESP)  | /boot            |
+| /dev/nvme0n1p2 | 残り全部 | btrfs      | /（subvolume 構成）|
+
+### btrfs subvolume レイアウト（Snapper 互換）
+
+| subvol      | マウントポイント            | 目的 |
+|-------------|-----------------------------|------|
+| `@`         | `/`                         | ロールバック対象のルート |
+| `@home`     | `/home`                     | ユーザデータをルートのロールバックから分離 |
+| `@log`      | `/var/log`                  | ロールバック時にログを失わない |
+| `@pkg`      | `/var/cache/pacman/pkg`     | パッケージキャッシュをスナップショットに含めない |
+| `@snapshots`| `/.snapshots`               | Snapper 格納先。再帰スナップショットを回避 |
+
+`/boot`（ESP / FAT32）は btrfs 外のため、スナップショットの対象外となる。
+
+---
 
 ## キーボードレイアウト
-【英字キーボードの場合は不要】日本語キーボード配列を切り替える
+【英字キーボードの場合は不要】日本語キーボード配列に切り替える
 ```bash
 loadkeys jp106
 ```
 
 ## 起動モードの確認
-本手順は起動モードがUEFIであることを前提とする
+本手順は起動モードが UEFI であることを前提とする
 ```bash
-ls /sys/firmware/efi
+ls /sys/firmware/efi/efivars
 ```
-実行結果に`efivars`というディレクトリがあればOK
+ディレクトリ内にファイルが列挙されれば UEFI で起動している。
 
 ## パーティションの作成
-ここでは以下のパーティション構成とする
-|パーティション |サイズ   |フォーマット |マウントポイント |
-|---------------|---------|-------------|-----------------|
-|/dev/nvme0n1p1 |1G       |FAT32        |/boot            |
-|/dev/nvme0n1p2 |残り全部 |btrfs        |/                |
 - ディスクの初期化
 ```bash
-sgdisk -z /dev/sda
+sgdisk -z /dev/nvme0n1
 ```
-- /boot用パーティションの作成
+- /boot 用（ESP）パーティションの作成
 ```bash
 sgdisk -n 1:0:+1G -t 1:ef00 -c 1:"EFI-System" /dev/nvme0n1
 ```
-- ルートディレクトリ用パーティションの作成
+- ルート用パーティションの作成
 ```bash
-sgdisk -n 2:0: -t 2:8300 -c 2:"ARCH-ROOT" /dev/nvme0n1
+sgdisk -n 2:0:0 -t 2:8300 -c 2:"ARCH-ROOT" /dev/nvme0n1
 ```
 
 ## パーティションのフォーマット
 ```bash
-mkfs.vfat -F32 /dev/nvme0n1p1
-mkfs.btrfs /dev/nvme0n1p2
+mkfs.fat -F32 /dev/nvme0n1p1
+mkfs.btrfs -f -L ARCH /dev/nvme0n1p2
 ```
 
-## パーティションのマウント
+## btrfs subvolume の作成
+トップレベルを一時マウントして subvolume を作成する。
 ```bash
-mount /dev/nvme0n1p1 /mnt
-mkdir /mnt/boot
-mount /dev/nvme0n1p2 /mnt/boot
+mount /dev/nvme0n1p2 /mnt
+btrfs subvolume create /mnt/@
+btrfs subvolume create /mnt/@home
+btrfs subvolume create /mnt/@log
+btrfs subvolume create /mnt/@pkg
+btrfs subvolume create /mnt/@snapshots
+umount /mnt
+```
+作成結果の確認（任意）
+```bash
+mount /dev/nvme0n1p2 /mnt && btrfs subvolume list /mnt && umount /mnt
 ```
 
-## 【有線LAN接続の場合は不要】無線LAN接続
-- 利用可能な無線インターフェースリストを取得する
+## subvolume のマウント
+マウントオプションは NVMe / SSD 前提。圧縮は `zstd:1`（高速寄り）、`discard=async` で継続 TRIM を行う。
+```bash
+# マウントオプションを変数化（このシェルセッション内のみ有効）
+BTRFS_OPTS="noatime,compress=zstd:1,ssd,discard=async"
+
+# ルート（@）
+mount -o ${BTRFS_OPTS},subvol=@ /dev/nvme0n1p2 /mnt
+
+# マウントポイントを作成
+mkdir -p /mnt/{home,var/log,var/cache/pacman/pkg,.snapshots,boot}
+
+# 各 subvolume をマウント
+mount -o ${BTRFS_OPTS},subvol=@home      /dev/nvme0n1p2 /mnt/home
+mount -o ${BTRFS_OPTS},subvol=@log       /dev/nvme0n1p2 /mnt/var/log
+mount -o ${BTRFS_OPTS},subvol=@pkg       /dev/nvme0n1p2 /mnt/var/cache/pacman/pkg
+mount -o ${BTRFS_OPTS},subvol=@snapshots /dev/nvme0n1p2 /mnt/.snapshots
+
+# ESP（/boot）
+mount /dev/nvme0n1p1 /mnt/boot
+```
+> **注意**: ここで全 subvolume をマウントしておくことが重要。後の `genfstab` は「マウント済みの構成」を fstab に書き出すため、マウント漏れがあると fstab に反映されない。
+
+## 【有線 LAN 接続の場合は不要】無線 LAN 接続
+- 利用可能な無線インターフェースの確認
 ```bash
 iwctl device list
 ```
-```bash
-(出力例)                            Devices
---------------------------------------------------------------------------------
-  Name                Address             Powered   Adapter   Mode
---------------------------------------------------------------------------------
-  wlan0               xx:xx:xx:xx:xx:xx   on        phy0      station
-```
-
-- 利用可能な無線ネットワークのスキャン
+- 無線ネットワークのスキャンと一覧
 ```bash
 iwctl station wlan0 scan
-```
-
-- スキャンした無線ネットワークの出力
-```bash
 iwctl station wlan0 get-networks
 ```
-```bash
-(出力例)                      Available networks
---------------------------------------------------------------------------------
-  Network name                    Security          Signal
---------------------------------------------------------------------------------
-  valinor                         psk               ****
-  arda                            psk               ****
-```
-
 - 無線ネットワークに接続
 ```bash
-iwctl station wlan0 connect arda --passphrase mysupersecretpassphrase
+iwctl station wlan0 connect <SSID> --passphrase <PASSPHRASE>
 ```
-
-- 接続した無線ネットワークの情報確認
+- 接続状態の確認
 ```bash
 iwctl station wlan0 show
 ```
 
-## ArchLinuxのインストール
-- ネットワークの疎通確認  
-インターネットに接続できることを確認する
+## ネットワーク疎通確認
 ```bash
-ping archlinux.org
+ping -c 3 archlinux.org
 ```
 
-- リポジトリの選択  
-日本のリポジトリを優先するために`/etc/pacman.d/mirrorlist`に以下の文を上に追記する
+## ミラーの最適化（ライブ環境）
+公式 ISO に同梱の `reflector` でミラーリストを生成する。
 ```bash
-Server = http://ftp.tsukuba.wide.ad.jp/Linux/archlinux/$repo/os/$arch
+reflector --country Japan --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
 ```
 
-- パッケージのインストール  
-intel-cpuの場合は`intel-ucode`、amd-cpuの場合は`amd-ucode`をインストールする
+## パッケージのインストール
+共通パッケージ群をインストールする。`pacstrap -K` でキーリングを初期化する。
 ```bash
-pacstrap /mnt base base-devel linux linux-headers linux-firmware intel-ucode dosfstools efibootmgr vi vim wpa_supplicant networkmanager dialog
+pacstrap -K /mnt \
+  base base-devel linux linux-headers linux-firmware \
+  btrfs-progs dosfstools efibootmgr \
+  networkmanager \
+  vim git sudo \
+  sof-firmware
 ```
 
-- fstabの作成
+CPU ベンダに応じて microcode を追加する。
+```bash
+# Intel CPU の場合
+pacstrap /mnt intel-ucode
+
+# AMD CPU の場合
+pacstrap /mnt amd-ucode
+```
+
+## fstab の作成
 ```bash
 genfstab -U /mnt >> /mnt/etc/fstab
 ```
+生成後、各 subvolume が `subvol=/@...` 付きで記載されているか確認する。
+```bash
+cat /mnt/etc/fstab
+```
 
-- chroot  
-`arch-chroot`コマンドでrootの作業場所を変更する
+## chroot
 ```bash
 arch-chroot /mnt
 ```
 
-- Localeの設定  
-`/etc/locale.gen`をvimで開き、`en_US.UTF-8 UTF-8`と`ja_JP.UTF-8 UTF-8`の行のコメントを解除し、`locale-gen`コマンドを実行する
+## Locale の設定
+`/etc/locale.gen` を編集し、`en_US.UTF-8 UTF-8` と `ja_JP.UTF-8 UTF-8` のコメントを解除する。
 ```bash
+vim /etc/locale.gen
+```
+```
 ...
 en_US.UTF-8 UTF-8
 ...
 ja_JP.UTF-8 UTF-8
 ...
 ```
+ロケールを生成する。
 ```bash
 locale-gen
 ```
-LANG環境変数を設定するため、`/etc/locale.conf`を作成し、以下の値を入力する
+`LANG` を設定する。
 ```bash
-echo "LANG=en_US.UTF-8 UTF-8" > /etc/locale.conf
+echo "LANG=en_US.UTF-8" > /etc/locale.conf
 ```
-【英字キーボードの場合不要】日本語キーボードを利用する場合は以下の値を`/etc/vconsole.conf`に記載する
+【英字キーボードの場合は不要】コンソール用キーマップを設定する。
 ```bash
 echo "KEYMAP=jp106" > /etc/vconsole.conf
 ```
 
-## timezoneの設定
-timezoneを日本に設定する
-```bash
-tzselect
-# 次に5、21、1と入力
-# 番号配置が変更されることがあるので注意
-```
-`/usr/share/zoneinfo`ディレクトリ配下に`/etc/localtime`シンボリックリンクを作成する
+## timezone の設定
+タイムゾーンのシンボリックリンクを作成し、ハードウェアクロックを同期する。
 ```bash
 ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
-```
-ハードウェアクロックの時間のズレを修正する
-```bash
-hwclock --systohc --utc
+hwclock --systohc
 ```
 
-## hostnameの設定
-`/etc/hostname`と`/etc/hosts`を編集してhostnameを設定する
+## hostname の設定
 ```bash
-echo "hostname" > /etc/hostname
+echo "myhost" > /etc/hostname
 ```
+`/etc/hosts` を編集する。
 ```bash
-127.0.0.1  localhost
-::1        localhost
-127.0.1.1  hostname
+vim /etc/hosts
 ```
-
-## initramfsイメージの作成
-```bash
-mkinitcpio -p linux
+```
+127.0.0.1   localhost
+::1         localhost
+127.0.1.1   myhost.localdomain myhost
 ```
 
-## rootパスワードの設定
-`passwd`コマンドでrootのパスワードを設定する
+## initramfs イメージの作成
+全プリセットを再生成する。
+```bash
+mkinitcpio -P
+```
+
+## root パスワードの設定
 ```bash
 passwd
 ```
 
-## BootLoaderの設定
-### PT-1: systemd-bootを利用する場合
-- systemd-bootをインストールする
+## ユーザの作成（chroot 内で実施）
+`wheel` グループに追加する。`sudo` はインストール済み。
+```bash
+useradd -m -G wheel <ユーザ名>
+passwd <ユーザ名>
+```
+`wheel` グループに sudo 権限を付与する。`visudo` で以下の行をアンコメントする。
+```bash
+EDITOR=vim visudo
+```
+```
+## Uncomment to allow members of group wheel to execute any command
+%wheel ALL=(ALL:ALL) ALL   # <- アンコメント
+```
+
+## BootLoader の設定
+
+> **スナップショットからの起動メニュー連携**を使う場合は **PT-2（GRUB + grub-btrfs）を推奨**。
+> systemd-boot（PT-1）はシンプルだが、Snapper のスナップショットをブートメニューに自動列挙する機能は持たない（代替として `limine` + `limine-snapper-sync` 等がある）。
+
+### PT-1: systemd-boot を利用する場合
+- インストールと自動更新サービスの有効化
 ```bash
 bootctl install
-```
-
-- 自動更新設定
-`systemd-boot-update.service`を有効化する
-```bash
 systemctl enable systemd-boot-update.service
 ```
-pacmanフックを追加する。`/etc/pacman.d/hooks/`に手動でファイルを配置する(ex.`/etc/pacman.d/hooks/95-systemd-boot.hook`)
-```bash
-[Trigger]
-Type = Package
-Operation = Upgrade
-Target = systemd
-
-[Action]
-Description = Gracefully upgrading systemd-boot...
-When = PostTransaction
-Exec = /usr/bin/systemctl restart systemd-boot-update.service
+- ローダー設定 `/boot/loader/loader.conf`
 ```
-
-- ローダー設定
-`/boot/loader/loader.conf`に以下の内容を記載する
-```bash
 default       arch.conf
 timeout       3
 console-mode  max
 editor        no
 ```
-
-- rootディレクトリのUUID確認
-`lsblk -f`コマンドでrootディレクトリのUUIDを確認する
+- ルートの UUID を確認
 ```bash
-NAME        FSTYPE FSVER LABEL UUID                                 FSAVAIL FSUSE% MOUNTPOINTS
-nvme0n1                                                                            
-├─nvme0n1p1 vfat   FAT32       </bootのUUID>                         434.2M    15% /boot
-└─nvme0n1p2 btrfs              </(rootディレクトリ)のUUID>             1.7T     4% /
+lsblk -f
 ```
+- ブートエントリ `/boot/loader/entries/arch.conf` を作成する。**btrfs subvolume 構成のため `rootflags=subvol=@` が必須**。
 
-- ブートエントリの作成
-`/boot/loader/entries/arch.conf`ファイルを作成して以下の値を記載する
-```bash
+Intel CPU の場合:
+```
 title   Arch Linux
 linux   /vmlinuz-linux
+initrd  /intel-ucode.img
 initrd  /initramfs-linux.img
-initrd  /intel-ucode.img (または /amd-ucode.img)
-options root=UUID=</(root)ディレクトリのUUID> rw rootflags=subvol=/
+options root=UUID=<ルートのUUID> rw rootflags=subvol=@
+```
+AMD CPU の場合（microcode 行のみ差し替え）:
+```
+title   Arch Linux
+linux   /vmlinuz-linux
+initrd  /amd-ucode.img
+initrd  /initramfs-linux.img
+options root=UUID=<ルートのUUID> rw rootflags=subvol=@
 ```
 
-### PT-2: GRUB2を利用する場合
-- grubをインストール
+### PT-2: GRUB + grub-btrfs を利用する場合（推奨）
+- インストール
 ```bash
-pacman -S grub
-```
-
-- grubの設定
-```bash
+pacman -S grub efibootmgr grub-btrfs inotify-tools
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=arch --recheck
 ```
+- 設定生成
 ```bash
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
+> grub-mkconfig は次を自動で処理する:
+> - ルートが subvolume `@` 上にあることを検出し、カーネル行に `rootflags=subvol=@` を付与する
+> - `intel-ucode.img` / `amd-ucode.img` を検出し、early initrd として組み込む（**手動エントリ不要**）
+>
+> 念のため、生成された `/boot/grub/grub.cfg` に `rootflags=subvol=@` と microcode の initrd 行が含まれているか確認すること。
 
-## Boot設定の確認
-`efibootmgr`コマンドでブート設定が反映されていることを確認する
+## Boot 設定の確認
 ```bash
-# systemd-bootを利用した場合の出力例
-BootCurrent: 0001
-Timeout: 0 seconds
-BootOrder: 0001
-Boot0001* UEFI OS       HD(1,GPT,225ca0b6-58bb-49a4-aee0-1bce7a0f8762,0x800,0x100000)/\EFI\BOOT\BOOTX64.EFI0000424f
+efibootmgr
 ```
-上記のような表示がされていれば恐らくOK
-
+- systemd-boot の場合: `Linux Boot Manager` エントリが登録される。
+- GRUB の場合: `arch`（`--bootloader-id` で指定した名前）が登録される。
 
 ## システム再起動
-以下のコマンドを実行後、インストールメディアを抜いて正常に起動するか確認する
+chroot を抜け、アンマウントして再起動する。インストールメディアを抜くこと。
 ```bash
 exit
-shutdown -h now
+umount -R /mnt
+reboot
 ```
+
+---
 
 # インストール後のセットアップ
-以降`root`ユーザにログインして設定を行う
-
-## ユーザの作成
-ユーザ作成時に`wheel`グループに追加する場合は`-G wheel`を記載する
-```bash
-useradd -m <ユーザ名> -G wheel
-passwd <ユーザ名>
-```
+作成したユーザでログインして設定を行う（sudo 利用）。
 
 ## ネットワークの有効化
-NetworkManager.serviceを起動する
 ```bash
-systemctl enable --now NetworkManager
+sudo systemctl enable --now NetworkManager
+```
+接続（CLI の例）:
+```bash
+nmcli device wifi connect <SSID> password <PASSPHRASE>
 ```
 
-## sudo設定
-- `sudo`パッケージのインストール
+## pacman の設定
+`/etc/pacman.conf` を編集する。
 ```bash
-pacman -S sudo
+sudo vim /etc/pacman.conf
 ```
-
-- `wheel`グループに属するユーザに`sudo`実行権限を付与  
-`visudo`コマンドを利用して以下をコメントアウトする
-```bash
-## Uncomment to allow members of group wheel to execute any command
-%wheel ALL=(ALL:ALL) ALL <-- Uncomment
+- 以下をアンコメント
 ```
-
-## pacmanの設定
-- カラー設定、並列ダウンロード  
-`/etc/pacman.conf`の以下の項をアンコメントする
-```bash
-(省略)
 Color
-(省略)
 VerbosePkgLists
-(省略)
 ParallelDownloads = 5
-(省略)
 ```
-
-- Multilibの有効化  
-Multilibを有効化することで32bitアプリケーションの使用が可能となる  
-`/etc/pacman.conf`の`[multilib]`の項をアンコメントする
-```bash
-(省略)
+- Multilib の有効化（32bit アプリ用。Steam 等で必要）
+```
 [multilib]
 Include = /etc/pacman.d/mirrorlist
-(省略)
+```
+- ミラー最適化と自動キャッシュ削除
+```bash
+sudo pacman -S reflector pacman-contrib
+sudo reflector --country Japan --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+sudo systemctl enable --now paccache.timer
 ```
 
-- Mirrorlistの最適化
-`reflector`のインストール
+## swap（zram）
+btrfs と相性が良い zram を利用する（物理スワップファイルは作らない）。
 ```bash
-pacman -S reflector
+sudo pacman -S zram-generator
 ```
-24時間以内に同期が行われた日本のhttpsサーバをMirrorlistに保存する
+`/etc/systemd/zram-generator.conf` を作成する。
+```ini
+[zram0]
+zram-size = min(ram / 2, 8192)
+compression-algorithm = zstd
+```
+反映する。
 ```bash
-reflector --country 'Japan' --age 24 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+sudo systemctl daemon-reload
+sudo systemctl start systemd-zram-setup@zram0.service
 ```
+確認:
+```bash
+zramctl
+swapon --show
+```
+> **TRIM について**: マウントオプションで `discard=async` を採用しているため、`fstrim.timer` の有効化は不要（二重実行になる）。`discard=async` を外す方針に変えた場合のみ `sudo systemctl enable --now fstrim.timer` を行う。
 
-- 自動キャッシュ削除  
-`pacman-contrib`をインストールする
+## AUR ヘルパーのインストール（paru）
+AUR が必要なものだけ `paru` を使う。`root` では実行不可のため作成したユーザで行う。
 ```bash
-pacman -S pacman-contrib
-```
-`paccache.timer`を有効化する
-```bash
-systemcts enable --now paccache.timer
-```
-
-## ユーザの切り替え
-`exit`をして`root`ユーザから作成したユーザに切り替える
-
-## AURヘルパーのインストール
-`yay`をインストールする。`root`ユーザでは利用できないため先ほど作成したユーザに切り替えてから実行する
-```bash
-sudo pacman -S git go
-git clone https://aur.archlinux.org/yay.git
-cd yay
+sudo pacman -S --needed base-devel git
+git clone https://aur.archlinux.org/paru.git
+cd paru
 makepkg -si
+cd .. && rm -rf paru   # ビルド後は削除可
 ```
-`make`後は`git clone`した`yay`ディレクトリを削除して問題ない
 
-## GUI環境のインストール
-KDE Plasmaを利用する
+## GUI 環境のインストール（KDE Plasma）
+KDE Plasma / SDDM / 各種ツールを `pacman` で導入する。
 ```bash
-yay -S acpid sddm plasma konsole dolphin
+sudo pacman -S plasma-meta sddm konsole dolphin
 sudo systemctl enable sddm
 ```
+> 最小構成にしたい場合は `plasma-meta` の代わりに `plasma-desktop` を選択する。
 
 ## 日本語設定
-- 日本語フォントのインストール
+- 日本語フォント（`ttf-bizin-gothic` は AUR）
 ```bash
-yay -S noto-fonts-cjk ttf-bizin-gothic
+sudo pacman -S noto-fonts-cjk noto-fonts-emoji
+paru -S ttf-bizin-gothic   # Nerd Font 版が必要なら ttf-bizin-gothic-nf 等を選択
 ```
-
-- 日本語インプットメソッドのインストール
+- 日本語インプットメソッド（fcitx5。公式リポジトリで導入）
 ```bash
-yay -S fcitx5 fcitx5-mozc fcitx5-configtool
+sudo pacman -S fcitx5-im fcitx5-mozc
 ```
+> `fcitx5-im` グループに `fcitx5` 本体・`fcitx5-configtool`・`fcitx5-qt`・`fcitx5-gtk` が含まれる。
 
-- 環境設定
-`/etc/environment`に以下の設定を記載する
-```bash
+### Plasma 6（Wayland）での有効化
+fcitx5 は Wayland フロントエンドが既定で有効で、ネイティブ Wayland アプリは text-input 経由で動作する。環境変数の全体設定は行わず、以下の手順で有効化する。
+
+1. **必須**: System Settings →「キーボード」→「仮想キーボード」で **Fcitx 5** を選択する（KWin が fcitx5 を起動し、Wayland の text-input を有効化する。これを行わないと Wayland ネイティブアプリで入力できない）。
+2. **任意**: XWayland / 旧 X11 アプリ向けのフォールバックが必要な場合のみ、`~/.config/environment.d/im.conf` を作成する。
+```ini
+# XWayland / 旧 X11 アプリ向けフォールバック
+GTK_IM_MODULE=fcitx
 XMODIFIERS=@im=fcitx
+# QT_IM_MODULE は KDE Wayland では設定しない（text-input を使うため空が推奨）
+```
+反映には再ログイン（または再起動）が必要。設定後は任意のアプリで `Ctrl+Space` で入力切替を確認する。
+
+---
+
+# 任意: Snapper によるスナップショット運用
+ルート（`@`）の自動スナップショットと、pacman 操作時の自動スナップショットを設定する。
+```bash
+sudo pacman -S snapper snap-pac
 ```
 
+## ルート設定の作成（@snapshots レイアウトとの整合）
+snapper は `create-config` 時に独自の `.snapshots` subvolume を作ろうとするため、既に用意した `@snapshots`（`/.snapshots`）と衝突する。以下の手順で整合させる。
+```bash
+# 1. 先に用意した @snapshots を一旦退避
+sudo umount /.snapshots
+sudo rmdir /.snapshots
+
+# 2. snapper の設定作成（この時点で snapper が /.snapshots subvolume を新規作成する）
+sudo snapper -c root create-config /
+
+# 3. snapper が作った /.snapshots を削除し、用意済みの @snapshots を使うよう戻す
+sudo btrfs subvolume delete /.snapshots
+sudo mkdir /.snapshots
+sudo mount -a            # fstab の @snapshots を再マウント
+sudo chmod 750 /.snapshots
+```
+自動スナップショット用タイマーを有効化する。
+```bash
+sudo systemctl enable --now snapper-timeline.timer
+sudo systemctl enable --now snapper-cleanup.timer
+```
+動作確認:
+```bash
+sudo snapper -c root list
+```
+
+## grub-btrfs によるブートメニュー連携（PT-2 / GRUB 利用時）
+スナップショットの変化を監視し、GRUB メニューへ自動反映するデーモンを有効化する。
+```bash
+sudo systemctl enable --now grub-btrfsd
+```
+> 既定で `snapper` の `/.snapshots` を監視する設定になっている。スナップショット作成後、GRUB のサブメニューから過去スナップショットを起動できる。読み取り専用スナップショットから起動したうえで `snapper rollback` を実行することで、システムを巻き戻せる。
