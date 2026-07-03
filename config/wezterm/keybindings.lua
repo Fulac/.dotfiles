@@ -84,12 +84,6 @@ M.keys = {
     mods   = "CTRL",
     action = act.SpawnTab("CurrentPaneDomain"),
   },
-  -- Ctrl+W : 現在のタブを閉じる
-  {
-    key    = "w",
-    mods   = "CTRL",
-    action = act.CloseCurrentTab({ confirm = false }),
-  },
   -- Ctrl+Tab : 次のタブへ移動
   {
     key    = "Tab",
