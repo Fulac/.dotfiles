@@ -1,0 +1,263 @@
+#!/bin/sh
+
+#==============================================================================
+# netlog - ネットワーク機器の対話セッションログを取得する
+#
+#   script(1) で SSH / telnet セッション全体を記録し、制御文字を除去した
+#   閲覧用テキストのみを残す。中間ファイル(raw / timing)は既定で削除する。
+#
+# 対応ディストリビューション:
+#   Debian 系 : Debian, Ubuntu, Linux Mint, Kali, Raspberry Pi OS ...
+#   Fedora 系 : Fedora, RHEL, CentOS Stream, Rocky, AlmaLinux ...
+#   Arch   系 : Arch Linux, CachyOS, Manjaro, EndeavourOS ...
+#
+#   POSIX sh のみで記述。bash / dash / zsh / ash のいずれで実行されても動作する。
+#==============================================================================
+set -u
+
+#------------------------------------------------------------------------------
+# detect_family - /etc/os-release からディストリビューションの系統を判定する
+#
+#   ID      : そのディストリ固有の識別子 (debian, fedora, arch, cachyos ...)
+#   ID_LIKE : 派生元の識別子 (ubuntu なら "debian", rocky なら "rhel centos fedora")
+#
+#   ID を先に評価し、一致しなければ ID_LIKE を評価する。この順序により
+#   派生ディストリ(Ubuntu / CachyOS / Rocky 等)も正しく分類できる。
+#   サブシェルで実行しているのは、os-release 内の変数定義が
+#   本スクリプトの変数(name, host 等)を上書きするのを防ぐため。
+#------------------------------------------------------------------------------
+detect_family() {
+    (
+        [ -r /etc/os-release ] || { printf 'unknown\n'; exit 0; }
+        . /etc/os-release
+        for id in ${ID:-} ${ID_LIKE:-}; do
+            case "$id" in
+                debian|ubuntu)      printf 'debian\n'; exit 0 ;;
+                fedora|rhel|centos) printf 'fedora\n'; exit 0 ;;
+                arch|archlinux)     printf 'arch\n';   exit 0 ;;
+            esac
+        done
+        printf 'unknown\n'
+    )
+}
+FAMILY="$(detect_family)"
+
+#------------------------------------------------------------------------------
+# pkg_hint - 不足コマンドの導入方法を系統別に案内する
+#
+#   同じコマンドでも提供パッケージ名がディストリごとに異なる。特に注意すべき点:
+#
+#     script   : Fedora 42 で util-linux から util-linux-script へ分離された。
+#                F41 以前は util-linux 本体に含まれる。RHEL 系は派生元の
+#                Fedora バージョンによりどちらかになる。
+#                Debian 系では bsdutils(essential)が提供するため通常は導入済み。
+#     col      : Debian 系では util-linux ではなく bsdextrautils が提供する。
+#                最小構成インストールでは未導入のことが多い。
+#     ansi2txt : Arch では公式リポジトリになく AUR の colorized-logs を使う。
+#     telnet   : Debian 系は inetutils-telnet、Arch は inetutils に同梱される。
+#
+#   パッケージ構成はリリースをまたぐと変わる(上記 Fedora の分離が実例)。
+#   この対応表は必ず陳腐化するため、pkg_query による実環境への
+#   問い合わせ手段を必ず併記すること。
+#------------------------------------------------------------------------------
+pkg_hint() {
+    case "$FAMILY" in
+        debian)
+            case "$1" in
+                script)   printf 'sudo apt install bsdutils' ;;
+                col)      printf 'sudo apt install bsdextrautils' ;;
+                ansi2txt) printf 'sudo apt install colorized-logs' ;;
+                ssh)      printf 'sudo apt install openssh-client' ;;
+                telnet)   printf 'sudo apt install inetutils-telnet' ;;
+            esac ;;
+        fedora)
+            case "$1" in
+                script)   printf 'sudo dnf install util-linux-script   [F41 以前は util-linux]' ;;
+                col)      printf 'sudo dnf install util-linux' ;;
+                ansi2txt) printf 'sudo dnf install colorized-logs' ;;
+                ssh)      printf 'sudo dnf install openssh-clients' ;;
+                telnet)   printf 'sudo dnf install telnet' ;;
+            esac ;;
+        arch)
+            case "$1" in
+                script|col) printf 'sudo pacman -S util-linux' ;;
+                ansi2txt)   printf 'AUR から導入: yay -S colorized-logs' ;;
+                ssh)        printf 'sudo pacman -S openssh' ;;
+                telnet)     printf 'sudo pacman -S inetutils' ;;
+            esac ;;
+        *)
+            printf '%s を提供するパッケージを導入してください' "$1" ;;
+    esac
+}
+
+#------------------------------------------------------------------------------
+# pkg_query - 実行ファイルの提供パッケージを実環境に問い合わせるコマンドを返す
+#
+#   上記の対応表はディストリのリリース更新で必ず外れる。案内どおりに
+#   導入しても解決しない場合は、このコマンドで実際の提供元を確認する。
+#     Fedora : dnf provides が標準でファイル一覧を検索できる
+#     Arch   : 事前に sudo pacman -Fy が必要
+#     Debian : apt-file の導入と sudo apt-file update が必要
+#------------------------------------------------------------------------------
+pkg_query() {
+    case "$FAMILY" in
+        debian) printf 'apt-file search bin/%s   [要 apt-file]' "$1" ;;
+        fedora) printf 'dnf provides "*/bin/%s"' "$1" ;;
+        arch)   printf 'pacman -F %s   [要 pacman -Fy]' "$1" ;;
+        *)      printf '' ;;
+    esac
+}
+
+# report_missing - 不足コマンドを報告する ($1=コマンド名 $2=error|warning)
+report_missing() {
+    printf '%s: %s が見つかりません (検出: %s 系)\n' "$2" "$1" "$FAMILY" >&2
+    printf '       導入方法    : %s\n' "$(pkg_hint "$1")" >&2
+    _q="$(pkg_query "$1")"
+    [ -n "$_q" ] && printf '       提供元の確認: %s\n' "$_q" >&2
+    return 0
+}
+
+# require - 必須コマンドの存在確認。無ければ導入方法を添えて終了する
+require() {
+    command -v "$1" >/dev/null 2>&1 && return 0
+    report_missing "$1" "error"
+    exit 127
+}
+
+usage() {
+    cat >&2 <<'USAGE'
+usage: netlog [-t] [-p PORT] [-d LOGDIR] [-k] [user@]host
+
+  -t         telnet で接続する (既定: ssh)
+  -p PORT    接続先ポート
+  -d LOGDIR  ログ出力先ディレクトリ (既定: カレント)
+  -k         中間ファイル(raw / timing)を削除せず残す
+USAGE
+    exit 2
+}
+
+#------------------------------------------------------------------------------
+# 引数解析
+#------------------------------------------------------------------------------
+proto="ssh"; port=""; logdir="."; keep=0
+
+while getopts "tp:d:kh" opt; do
+    case "$opt" in
+        t) proto="telnet" ;;
+        p) port="$OPTARG" ;;
+        d) logdir="$OPTARG" ;;
+        k) keep=1 ;;
+        *) usage ;;
+    esac
+done
+shift $((OPTIND - 1))
+[ $# -eq 1 ] || usage
+
+target="$1"
+# user@host 形式かどうかを判定してから分解する。
+# 判定なしに ${target%@*} を使うと、@ を含まない入力では
+# ホスト名がそのままユーザ名として扱われてしまう。
+case "$target" in
+    *@*) user="${target%@*}"; host="${target#*@}" ;;
+    *)   user="";             host="$target"      ;;
+esac
+
+#------------------------------------------------------------------------------
+# 依存コマンドの確認
+#------------------------------------------------------------------------------
+require script
+require "$proto"
+
+# ansi2txt / col は無くても raw ログは取得できるため、警告に留める
+have_ansi2txt=0; have_col=0
+command -v ansi2txt >/dev/null 2>&1 && have_ansi2txt=1
+command -v col      >/dev/null 2>&1 && have_col=1
+
+if [ "$have_ansi2txt" -eq 0 ]; then
+    report_missing ansi2txt "warning"
+    printf '       -> 整形をスキップし raw のみ保存します\n' >&2
+    keep=1   # 整形できない以上、raw を消すと記録が完全に失われる
+fi
+if [ "$have_col" -eq 0 ]; then
+    report_missing col "warning"
+    printf '       -> バックスペース除去を省略します\n' >&2
+fi
+
+#------------------------------------------------------------------------------
+# 接続コマンドの組み立て
+#   ssh    はポートを -p で指定する
+#   telnet はポートを位置引数(末尾)で指定する
+#   この差異をここで吸収し、利用者は常に -p を使えるようにする
+#------------------------------------------------------------------------------
+case "$proto" in
+    ssh)
+        cmd="ssh -o LogLevel=ERROR"
+        [ -n "$port" ] && cmd="$cmd -p $port"
+        cmd="$cmd $target"
+        ;;
+    telnet)
+        cmd="telnet"
+        # -l は telnet の ENVIRON オプションでユーザ名を送る機能。
+        # Cisco IOS は通常これを解釈せず接続後に Username: を出すため、
+        # 手入力を求められるのが普通(害はないので付与する)。
+        [ -n "$user" ] && cmd="$cmd -l $user"
+        cmd="$cmd $host"
+        [ -n "$port" ] && cmd="$cmd $port"
+        ;;
+esac
+
+#------------------------------------------------------------------------------
+# ファイル名の生成
+#   tr -c は「指定した文字集合以外」を置換する。IPv6 アドレスのコロンなど
+#   ファイル名として扱いにくい文字を _ に潰す。
+#------------------------------------------------------------------------------
+safe="$(printf '%s' "$host" | tr -c 'A-Za-z0-9._-' '_')"
+ts="$(date +%Y%m%dT%H%M%S)"
+
+mkdir -p "$logdir" || exit 1
+base="${logdir}/${ts}_${safe}"
+raw="${base}_raw.log"
+timing="${base}.timing"
+clean="${base}.log"
+
+#------------------------------------------------------------------------------
+# 記録
+#------------------------------------------------------------------------------
+printf 'connecting: %s\n' "$cmd"
+script --quiet --flush --log-timing "$timing" -c "$cmd" "$raw"
+
+if [ ! -s "$raw" ]; then
+    printf 'error: ログが空です。接続に失敗した可能性があります\n' >&2
+    rm -f "$raw" "$timing"
+    exit 1
+fi
+
+#------------------------------------------------------------------------------
+# 整形
+#   ansi2txt : ANSI 制御コードを除去する。ただしカーソル位置制御も
+#              単に無視されるため、画面書き換えを伴う出力は乱れることがある。
+#   col -bx  : バックスペースによる打ち消しを確定させる。-x は必須
+#              (省略するとスペースがタブに変換され Cisco の桁揃えが崩れる)。
+#   tr -d    : CRLF 由来の ^M を除去する。
+#------------------------------------------------------------------------------
+if [ "$have_ansi2txt" -eq 1 ]; then
+    if [ "$have_col" -eq 1 ]; then
+        ansi2txt < "$raw" | col -bx | tr -d '\r' > "$clean"
+    else
+        ansi2txt < "$raw" | tr -d '\r' > "$clean"
+    fi
+fi
+
+#------------------------------------------------------------------------------
+# 中間ファイルの削除
+#   整形結果が正常に生成できたときだけ削除する。
+#   失敗時に削除すると記録が完全に失われるため、必ず存在と非空を確認する。
+#------------------------------------------------------------------------------
+if [ "$keep" -eq 0 ] && [ -s "$clean" ]; then
+    rm -f "$raw" "$timing"
+    printf 'log: %s\n' "$clean"
+else
+    [ -s "$clean" ] && printf 'clean : %s\n' "$clean"
+    printf 'raw   : %s\n' "$raw"
+    printf 'timing: %s\n' "$timing"
+fi
