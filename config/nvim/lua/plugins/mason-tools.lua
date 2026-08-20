@@ -12,7 +12,6 @@ return {
       -- フォーマッター
       "prettier",
       "clang-format",
-      "ruff_format",
     },
     auto_update = false,
     run_on_start = false,
