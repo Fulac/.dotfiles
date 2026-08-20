@@ -16,37 +16,37 @@ return {
   keys = {
     -- プロジェクト全体の診断（エラー・警告）をトグル
     {
-      "<leader>xx",
+      "<leader>ee",
       "<cmd>Trouble diagnostics toggle win={size=0.2}<cr>",
       desc = "Diagnostics (Trouble)",
     },
     -- 現在のバッファ（ファイル）のみの診断をトグル
     {
-      "<leader>xX",
+      "<leader>eE",
       "<cmd>Trouble diagnostics toggle filter.buf=0 win={size=0.2}<cr>",
       desc = "Buffer Diagnostics (Trouble)",
     },
     -- LSPのシンボル（関数や変数の構造一覧）を右側にトグル
     {
-      "<leader>cs",
+      "<leader>es",
       "<cmd>Trouble symbols toggle focus=false win={position=right, size=0.3}<cr>",
       desc = "Symbols (Trouble)",
     },
     -- LSPの定義や参照元（References）をトグル
     {
-      "<leader>cl",
+      "<leader>el",
       "<cmd>Trouble lsp toggle focus=false win={position=bottom, size=0.3}<cr>",
       desc = "LSP Definitions / References (Trouble)",
     },
     -- クイックフィックスリストの表示
     {
-      "<leader>xq",
+      "<leader>eq",
       "<cmd>Trouble qflist toggle win={size=0.2}<cr>",
       desc = "Quickfix List (Trouble)",
     },
     -- ロケーションリストの表示
     {
-      "<leader>xl",
+      "<leader>el",
       "<cmd>Trouble loclist toggle win={size=0.2}<cr>",
       desc = "Location List (Trouble)",
     },

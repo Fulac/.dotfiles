@@ -27,20 +27,43 @@ return {
       "saghen/blink.cmp",
     },
     config = function()
-      -- 共通: グローバル LSP UI 設定 (枠線・診断表示)
-      vim.diagnostic.config({
-        float = { border = "rounded" },
+      -- 表示ONのときのハンドラ設定
+      local diag_display_on = {
         virtual_text = { prefix = "●" },
-        severity_sort = true,
+        underline = true,
         signs = {
           text = {
             [vim.diagnostic.severity.ERROR] = " ",
-            [vim.diagnostic.severity.WARN] = " ",
-            [vim.diagnostic.severity.HINT] = " ",
-            [vim.diagnostic.severity.INFO] = " ",
+            [vim.diagnostic.severity.WARN]  = " ",
+            [vim.diagnostic.severity.HINT]  = " ",
+            [vim.diagnostic.severity.INFO]  = " ",
           },
         },
-      })
+      }
+
+      -- 表示OFFのときのハンドラ設定
+      local diag_display_off = {
+        virtual_text = false,
+        underline = false,
+        signs = false,
+      }
+
+      -- 共通: グローバル LSP UI 設定 (枠線・診断表示)
+      vim.diagnostic.config(vim.tbl_extend("force", {
+        severity_sort = true,
+        update_in_insert = false,
+        -- 表示OFFでも手動ポップアップは使うので、枠線と発生源(source)は設定しておく
+        float = {
+          border = "rounded",
+          source = true,   -- yamlls / ruff など、どのサーバー由来かを表示
+          header = "",
+        },
+      }, diag_display_off))
+
+      -- 現在の表示状態を判定するヘルパー
+      local function diag_is_shown()
+        return vim.diagnostic.config().virtual_text ~= false
+      end
 
       -- LspAttach オートコマンド
       vim.api.nvim_create_autocmd("LspAttach", {
@@ -111,6 +134,13 @@ return {
       -- :lsp サブコマンドのショートカット
       -- vim.lspのcheck health
       vim.keymap.set("n", "<leader>li", "<cmd>checkhealth vim.lsp<cr>", { desc = "LSP Info (checkhealth)" })
+
+      -- <leader>ld で診断表示のON/OFFトグル
+      vim.keymap.set("n", "<leader>ld", function()
+        local next_state = not diag_is_shown()
+        vim.diagnostic.config(next_state and diag_display_on or diag_display_off)
+        vim.notify("Diagnostics display: " .. (next_state and "ON" or "OFF"), vim.log.levels.INFO)
+      end, { desc = "Toggle Diagnostics Display" })
 
       -- 全LSPクライアント再起動
       vim.keymap.set("n", "<leader>lr", function()

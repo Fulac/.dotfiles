@@ -18,7 +18,7 @@ return {
       { "<leader>f", group = "Find/File" },
       { "<leader>g", group = "Git" },
       { "<leader>l", group = "LSP (管理)" },
-      { "<leader>x", group = "Diagnostics" },
+      { "<leader>e", group = "Diagnostics" },
       { "<leader>m", group = "Markdown" },
       { "<leader>b", group = "Buffer" },
       { "<leader>a", group = "AI (CodeCompanion)" },

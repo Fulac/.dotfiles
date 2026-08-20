@@ -8,6 +8,7 @@ return {
     lint.linters_by_ft = {
       yaml = { "yamllint" },
       markdown = { "markdownlint" },
+      lua = { "selene" },
     }
 
     -- 編集や保存のタイミングで自動的にリンターを走らせるオートコマンド

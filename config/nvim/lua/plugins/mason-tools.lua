@@ -5,12 +5,14 @@ return {
   opts = {
     -- ここに記述したLinter/Formatterが、起動時にMason経由で自動インストールされる
     ensure_installed = {
-      -- フォーマッター
-      "prettier",
-      "clang-format",
       -- リンター
       "yamllint",
       "markdownlint",
+      "selene",
+      -- フォーマッター
+      "prettier",
+      "clang-format",
+      "ruff_format",
     },
     auto_update = false,
     run_on_start = false,
