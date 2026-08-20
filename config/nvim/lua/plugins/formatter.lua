@@ -29,7 +29,7 @@ return {
         prepend_args = {
           -- 直接YAML形式のスタイル設定を引数として流し込む
           -- デフォルトと同じ設定（タブ幅などを変えたければ以下を編集する）
-          "--style={BasedOnStyle: LLVM, IndentWidth: 2, UseTab: Never}",
+          "--style={BasedOnStyle: LLVM, IndentWidth: 4, UseTab: Never}",
         },
       },
     },
