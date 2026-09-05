@@ -38,7 +38,7 @@ if type eza >/dev/null 2>&1; then
   alias ls="eza --group-directories-first"
   alias ll="eza -l --group --git --group-directories-first"
   alias la="eza -la --group --git --group-directories-first"
-  alias lt="eza --group --tree --level=2 --git-ignore"
+  alias lt="eza --group --tree --level=3 --git-ignore"
   alias lta="eza --group --tree --git-ignore"
   alias llt="eza -l --group --tree --level=2 --git --git-ignore"
   alias lat="eza -la --group --tree --level=2 --git --git-ignore"
